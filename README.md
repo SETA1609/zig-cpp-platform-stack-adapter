@@ -28,7 +28,7 @@ zVoxRealms ([`docs/external-libs-catalog.md` § 3 Platform-stack](https://github
 3. **Exposes action-mapped input from day one.** Direct key/button reads are anti-patterns for rebindable games. `bindAction` / `actionPressed` / `actionValue` is the public surface; raw key codes stay inside the backend
 4. **Supports Input Mapping Contexts.** Stackable binding layers (gameplay / dialog / inventory / cinematic) so gameplay code never gates on "is dialog open"
 5. **Supports synthetic action injection.** Drives the same downstream path as real input — powers integration tests, scripted cutscenes, tutorial overlays
-6. **Hands Vulkan a surface without coupling the engine to the windowing backend.** Engine renderer calls `platform.createVulkanSurface(window, instance)` — backend chooses the right `vk*Surface*KHR` call internally
+6. **Exposes native window handles without depending on Vulkan.** Engine calls `platform.nativeHandle(window)` and passes the result to `vk_stack.createSurface(instance, handle)`. The platform adapter has **zero Vulkan dep** — a headless server, config editor, or any non-rendering tool can use this adapter without dragging vulkan-zig along. Cross-adapter dep direction: `vulkan-stack → platform-stack` (one-way data dep; no cycle)
 
 Full spec: [`docs/specs/platform.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/specs/platform.md) in the parent project.
 
@@ -40,10 +40,11 @@ These land here progressively as the adapter's roadmap advances. Each is wrapped
 
 | Library | License | Role | Integration |
 | --- | --- | --- | --- |
-| [**GLFW**](https://github.com/glfw/glfw) | Zlib | Cross-platform window + input + monitor + gamepad | Vendored as a git submodule under `vendor/glfw/`; compiled by `build.zig` only when `-Dplatform_backend=glfw` |
-| [**vulkan-zig**](https://github.com/Snektron/vulkan-zig) | MIT | Vulkan type imports for `createVulkanSurface` return type | Indirect via `zig-cpp-vulkan-stack-adapter` to avoid duplicate version pinning |
+| [**GLFW**](https://github.com/glfw/glfw) | Zlib | Cross-platform window + input + monitor + gamepad | Vendored as a git submodule under `vendor/glfw/`; compiled by `build.zig` only when `-Dplatform_backend=glfw`. The backend calls `glfwGetX11Window`, `glfwGetWin32Window`, etc. to extract the native handle that `nativeHandle()` exposes |
 
 The GLFW backend is a single file (`src/backend/glfw.zig`) — GLFW itself handles per-OS dispatch internally.
+
+**No Vulkan deps in this adapter.** The renderer (in [`zig-cpp-vulkan-stack-adapter`](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)) imports the `NativeWindowHandle` tagged union defined here and creates Vulkan surfaces itself.
 
 ### v1.x onward — pure-Zig native backends
 
@@ -94,7 +95,7 @@ Real platform wrapping has not started yet. Track progress at [zVoxRealms ROADMA
 │   ├── root.zig                       # public API — re-exports from `backend` module
 │   ├── common.zig                     # shared types: Event, KeyCode, WindowOptions, ActionId
 │   ├── action_input.zig               # action-mapping + Input Mapping Contexts + synthetic injection
-│   ├── vulkan_surface.zig             # platform-conditional Vulkan surface creation
+│   ├── native_handle.zig              # per-backend native window handle extraction
 │   ├── backend/
 │   │   ├── glfw.zig                   # v0 backend — single file
 │   │   └── native/                    # v1.x backend — file per OS
