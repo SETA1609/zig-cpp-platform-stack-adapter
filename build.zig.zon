@@ -16,9 +16,16 @@
     // Minimum Zig version that can build this package.
     .minimum_zig_version = "0.16.0",
 
-    // Zig dependencies. Empty at Phase 0. To be populated as the
-    // adapter starts wrapping its bundled libs (vulkan-zig for the
-    // surface type; vendored GLFW for the v0 backend).
+    // Zig dependencies. Empty at Phase 0 and intentionally stays narrow.
+    // This adapter has NO Vulkan dependency — per-OS native handle
+    // getters return inline-anon structs of raw OS primitives; the
+    // engine pairs them with vulkan-stack's matching per-OS surface
+    // creators in a small render/surface.zig helper. See README.md
+    // and the parent project's docs/specs/platform.md § Rule 2.
+    //
+    // GLFW (Zlib) is vendored as a git submodule under vendor/glfw/
+    // for the v0 backend and compiled by build.zig directly — not
+    // a Zig package dep.
     .dependencies = .{},
 
     // Files included when this package is fetched as a dependency
