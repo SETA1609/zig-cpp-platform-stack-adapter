@@ -1,152 +1,168 @@
-# cpp-zig-hybrid-template
+# zig-cpp-platform-stack-adapter
 
-A minimal template that compiles and links **Zig**, **C**, and **C++** sources into a single executable using Zig's build system. The Zig program calls into functions defined in C and C++ via `extern` declarations.
+A meta-package adapter exposing a **stable Zig API** for the platform layer — window, events, action-mapped input, time, file I/O, and Vulkan-surface creation. The implementation backend swaps between major versions of this sub-repo without consumers changing a line of code.
 
-There is no separate Make, CMake, or external toolchain — Zig ships its own C/C++ compiler (a frontend over LLVM/Clang), so a single `zig build` step handles every language in this repo.
+**License:** [MIT](LICENSE)
+**Status:** Phase 0 (Foundation) — currently a hello-world stub. Real backend wrapping starts at [zVoxRealms](https://github.com/SETA1609/zigVoxelWorlds) Phase 1.
 
-## Project layout
+---
 
-```
+## What it is
+
+A standalone Zig package that consumers (engines, games, tools) import as a single dependency to get cross-platform windowing + input. Bundled in this single sub-repo are:
+
+- **Public Zig API** (`src/root.zig`) — opaque `Window`, queued `Event`, action-mapped input, time, file paths, Vulkan-surface creation
+- **One backend implementation at a time** — selected at build time by `-Dplatform_backend`
+- **Vendored external libraries** when a backend needs them (today: GLFW)
+
+Engine code never sees a backend choice — it imports `platform` and calls the stable API. Backends rotate underneath across sub-repo versions.
+
+This is the second meta-package adapter under zVoxRealms; the first is [`zig-cpp-vulkan-stack-adapter`](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter). Both follow the `zig-cpp-<name>-stack-adapter` naming convention.
+
+## What it's needed for
+
+zVoxRealms ([`docs/external-libs-catalog.md` § 3 Platform-stack](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/external-libs-catalog.md)) needs a windowing + input layer that:
+
+1. **Survives the GLFW → native transition.** v0–v1.0 uses GLFW for rapid iteration. v1.x onward uses pure-Zig X11/Wayland/Win32/Android backends. Same public API across both — engine source changes nowhere
+2. **Tree-shakes per export target.** When exporting a game for Linux, Windows/macOS/Android backend code is never compiled in (per-target source selection in `build.zig`). Verifiable with `nm libzvox-runtime.so`
+3. **Exposes action-mapped input from day one.** Direct key/button reads are anti-patterns for rebindable games. `bindAction` / `actionPressed` / `actionValue` is the public surface; raw key codes stay inside the backend
+4. **Supports Input Mapping Contexts.** Stackable binding layers (gameplay / dialog / inventory / cinematic) so gameplay code never gates on "is dialog open"
+5. **Supports synthetic action injection.** Drives the same downstream path as real input — powers integration tests, scripted cutscenes, tutorial overlays
+6. **Hands Vulkan a surface without coupling the engine to the windowing backend.** Engine renderer calls `platform.createVulkanSurface(window, instance)` — backend chooses the right `vk*Surface*KHR` call internally
+
+Full spec: [`docs/specs/platform.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/specs/platform.md) in the parent project.
+
+## Which libraries this adapter will use and adapt
+
+These land here progressively as the adapter's roadmap advances. Each is wrapped behind the same stable Zig API.
+
+### v0–v1.0 backend — GLFW
+
+| Library | License | Role | Integration |
+| --- | --- | --- | --- |
+| [**GLFW**](https://github.com/glfw/glfw) | Zlib | Cross-platform window + input + monitor + gamepad | Vendored as a git submodule under `vendor/glfw/`; compiled by `build.zig` only when `-Dplatform_backend=glfw` |
+| [**vulkan-zig**](https://github.com/Snektron/vulkan-zig) | MIT | Vulkan type imports for `createVulkanSurface` return type | Indirect via `zig-cpp-vulkan-stack-adapter` to avoid duplicate version pinning |
+
+The GLFW backend is a single file (`src/backend/glfw.zig`) — GLFW itself handles per-OS dispatch internally.
+
+### v1.x onward — pure-Zig native backends
+
+The native backend ships when the engine moves past v1.0. Each OS gets its own file, selected at build time per target:
+
+| Library / Subsystem | Where | Wrapped how |
+| --- | --- | --- |
+| [**xcb / Xlib**](https://xcb.freedesktop.org/) (X11) | `src/backend/native/linux_x11.zig` | Pure-Zig `extern fn` calls; no C wrapping needed for X11 |
+| [**Wayland protocols**](https://wayland.app/) | `src/backend/native/linux_wayland.zig` | Pure-Zig protocol implementation against `libwayland-client`; XML protocol descriptions compiled to Zig at build time |
+| [**Win32 API**](https://learn.microsoft.com/en-us/windows/win32/api/) | `src/backend/native/windows.zig` | Pure-Zig via `std.os.windows` + `extern fn` for user32/gdi32/xinput |
+| **AInputQueue / ANativeWindow** (Android NDK) | `src/backend/native/android.zig` | Pure-Zig NDK bindings; activity lifecycle hooks |
+| **NSWindow / Cocoa** (macOS) | _deferred_ — `mission.md` defers macOS post-v1.0 | Likely Objective-C runtime via `objc.zig` |
+
+The native backend has no C dependencies — it replaces GLFW entirely. The migration trigger is bumping this sub-repo from v1.x to v2.0 in the consumer's `build.zig.zon`. Engine source changes nowhere across the swap.
+
+### Optional supporting libraries (under evaluation)
+
+| Library | License | Why we might adopt |
+| --- | --- | --- |
+| **libxkbcommon** | MIT | If pure-Zig X11/Wayland keymap code becomes too painful, libxkbcommon is the universal Linux input keymap layer |
+| **libudev** | LGPL | ❌ rejected — LGPL is forbidden per [`licensing.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/licensing.md). Gamepad hotplug events handled via `/dev/input/event*` polling or `epoll` on `/sys/class/input/` |
+| **wayland-protocols XML** | MIT | Pre-compiled Zig bindings from the protocol XMLs; build-time generator |
+
+LGPL libraries (libudev, libnice, gettext libintl) are explicitly forbidden per the parent project's licensing policy. The pure-Zig native backend implements equivalent functionality from primitives instead.
+
+---
+
+## Current state — Phase 0 hello-world
+
+The repo currently contains a Zig + C + C++ hello-world stub inherited from the build template, plus:
+
+- `LICENSE` — MIT
+- `.clang-format` — Google C++ baseline + zVoxRealms tweaks (matches root project's [`docs/cpp-style.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/cpp-style.md))
+- `build.zig.zon` — package manifest
+
+Real platform wrapping has not started yet. Track progress at [zVoxRealms ROADMAP § Phase 1](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/ROADMAP.md).
+
+## Planned layout (target — not yet on disk)
+
+```text
 .
-├── build.zig               # The entire build system, written in Zig
-└── src/
-    ├── main.zig            # Entry point; calls into C and C++ functions
-    ├── c/
-    │   └── greetFromC.c    # Any *.c file here is auto-compiled with -std=c23
-    └── cpp/
-        └── greetFromCpp.cpp # Any *.cpp file here is auto-compiled with -std=c++23
+├── LICENSE
+├── README.md
+├── .clang-format
+├── build.zig                          # per-target backend selection
+├── build.zig.zon
+├── src/
+│   ├── root.zig                       # public API — re-exports from `backend` module
+│   ├── common.zig                     # shared types: Event, KeyCode, WindowOptions, ActionId
+│   ├── action_input.zig               # action-mapping + Input Mapping Contexts + synthetic injection
+│   ├── vulkan_surface.zig             # platform-conditional Vulkan surface creation
+│   ├── backend/
+│   │   ├── glfw.zig                   # v0 backend — single file
+│   │   └── native/                    # v1.x backend — file per OS
+│   │       ├── linux.zig              # runtime-dispatches X11 vs Wayland
+│   │       ├── linux_x11.zig
+│   │       ├── linux_wayland.zig
+│   │       ├── windows.zig
+│   │       ├── macos.zig              # deferred post-v1.0
+│   │       └── android.zig
+│   └── tests/                         # integration tests against the public API
+└── vendor/
+    └── glfw/                          # external lib as git submodule
+                                       # compiled only when backend=glfw
 ```
 
-C and C++ live in separate directories so the build script can apply the right compiler flags to each language by walking only the appropriate tree. Subdirectories under `src/c/` and `src/cpp/` are walked recursively.
+`vendor/glfw/` is a **vendored dependency** of the adapter, not a sub-library. Structurally identical to how the Vulkan-stack adapter vendors its C++ libs.
 
-## How it works
+## Build (template / hello-world)
 
-The whole build is driven by `build.zig`. If you've used CMake, think of `build.zig` as the equivalent of `CMakeLists.txt` — except it's written in plain Zig, not a custom DSL.
-
-1. **`build.zig` declares a Module and an executable.** A `Module` is created via `b.createModule(...)` to hold the Zig root file, the target/optimize options, and the libc/libc++ linkage settings. The executable named `demo` is then built from that module via `b.addExecutable(.{ .root_module = exe_mod, ... })`.
-2. **C and C++ sources are discovered automatically.** `getFilesFromDir` recursively walks `src/c/` and `src/cpp/`, collects the `.c` and `.cpp` files, and feeds each list to `exe_mod.addCSourceFiles(...)` with the appropriate flags (`-std=c23` for C, `-std=c++23` for C++, plus `-Wall -Wextra -pedantic`). In Zig 0.16 these calls go on the Module, not on the compile step.
-3. **libc and libc++ are linked** by setting `link_libc = true` and `link_libcpp = true` on the Module's create options, so the standard libraries are available at runtime.
-4. **Cross-language calls** work through the C ABI:
-   - In `main.zig`, foreign functions are declared with `extern fn greetFromC() void;` and `extern fn greetFromCpp() void;`.
-   - The C function is just a normal C symbol.
-   - The C++ function is wrapped in `extern "C"` so its name is not mangled and Zig can resolve it by symbol name at link time.
-5. **Linking** is performed by Zig, which produces a single native binary in `zig-out/bin/`.
-
-At runtime, `main.zig` prints a greeting from Zig, calls the C and C++ functions in turn, and prints a success line.
-
-## Requirements
-
-- [Zig](https://ziglang.org/download/) **0.16 or newer**. The build script and `main.zig` use the post-0.16 APIs (the `Io` interface, the `Module`-based `addExecutable`, the unmanaged `ArrayList`, and `pub fn main(init: std.process.Init)`). On older Zig (≤ 0.15) you would need to revert these to their pre-0.16 forms.
-
-No separate C or C++ toolchain is required — Zig provides everything.
-
-## Build & run
-
-Build the binary:
-
-```bash
-zig build
-```
-
-Build and run in one step:
-
-```bash
+```sh
 zig build run
 ```
 
-The compiled executable lives at `zig-out/bin/demo` after a successful build.
+Requires **Zig 0.16 or newer**. The build script and `main.zig` use post-0.16 APIs (the `Io` interface, the `Module`-based `addExecutable`, the unmanaged `ArrayList`, and `pub fn main(init: std.process.Init)`).
 
-### Passing arguments
+When backend selection lands, the build will add a `-Dplatform_backend=glfw|native` option.
 
-`build.zig` forwards extra arguments to the program:
+## Consuming this adapter
 
-```bash
-zig build run -- arg1 arg2
+When real wrapping lands, consumers will use:
+
+```zig
+// In your build.zig.zon
+.dependencies = .{
+    .platform_stack_adapter = .{
+        .url = "git+https://github.com/SETA1609/zig-cpp-platform-stack-adapter.git#<tag>",
+        .hash = "...",
+    },
+},
 ```
 
-### Release builds
+```zig
+// In your Zig code
+const platform = @import("platform");
 
-```bash
-zig build -Doptimize=ReleaseFast
-zig build -Doptimize=ReleaseSafe
-zig build -Doptimize=ReleaseSmall
+const window = try platform.Window.create(.{
+    .title = "my game",
+    .size = .{ .w = 1280, .h = 720 },
+    .vulkan_compatible = true,
+});
+
+if (platform.actionPressed(.jump)) player.jump();
 ```
 
-### Cross-compiling
+## Cross-reference
 
-Zig can cross-compile for any supported target out of the box, e.g.:
+- Parent project: [zVoxRealms](https://github.com/SETA1609/zigVoxelWorlds)
+- Catalog entry: [`docs/external-libs-catalog.md` § 3 Platform-stack](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/external-libs-catalog.md)
+- API contract: [`docs/specs/platform.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/specs/platform.md)
+- Sibling adapter: [zig-cpp-vulkan-stack-adapter](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)
+- Licensing policy: [`docs/licensing.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/licensing.md)
+- C++ style: [`docs/cpp-style.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/cpp-style.md)
 
-```bash
-zig build -Dtarget=x86_64-windows
-zig build -Dtarget=aarch64-linux
-```
+## Adapter pattern note — the two C ABIs
 
-## Adding more sources
+zVoxRealms has two distinct `extern "C"` surfaces and this adapter touches one of them:
 
-Drop the file into the matching directory — that's it.
+1. **Internal adapter bridge** (this repo) — when a backend has C++ pieces (none today; possibly some macOS Objective-C++ later), they're wrapped in `extern "C"` and re-exported as idiomatic Zig types
+2. **Public mod/script ABI** — a separate concern, lives in the parent project's `docs/specs/c-abi.md`. Not consumed by this adapter
 
-- A new C file → `src/c/whatever.c` (or any subdirectory below it). It is compiled with the C flags on the next `zig build`.
-- A new C++ file → `src/cpp/whatever.cpp`. Same idea, with the C++ flags.
-
-To call a new C/C++ function from Zig, declare it with `extern fn ...` in `main.zig`. For C++, wrap the definition in `extern "C"` so its symbol is not name-mangled.
-
-### A note on stdio buffering across languages
-
-When Zig, C, and C++ share the same `stdin` / `stdout` file descriptors, you can run into ordering and "lost data" problems that have nothing to do with FFI itself — they come from the fact that each language's standard library puts its own buffer on top of the OS file descriptor.
-
-#### Output (stdout)
-
-Zig's `writeStreamingAll` writes directly to the stdout file descriptor, while C's `printf` and C++'s `std::cout` buffer their output and only flush when the program exits (or when a flush is requested). When all three languages share stdout, this means a `printf` line written *before* a Zig line can show up *after* it.
-
-This template solves that by flushing from C and C++ explicitly:
-
-- `greetFromC.c` calls `fflush(stdout);` after each `printf`.
-- `greetFromCpp.cpp` writes `std::flush` (or use `std::endl`) at the end of each `<<` chain.
-
-If you add new C/C++ functions that write to stdout, do the same — otherwise their output will land at the end of the program in libc/libc++ teardown order, not at the call site.
-
-`stderr` is unbuffered by default in both C (`fprintf(stderr, ...)`) and C++ (`std::cerr`), so you don't need to flush it. `std::clog` *is* buffered, despite also targeting stderr — easy to forget.
-
-#### Input (stdin)
-
-Reading stdin from more than one language is the symmetric trap. Each runtime keeps its own input buffer, so when C calls `fgets`/`scanf` libc may slurp several kilobytes from the file descriptor and stash the leftover bytes in *its* buffer. A subsequent Zig read of the same fd will not see those bytes — they're invisible to anything outside libc's stdio.
-
-The fix is to **let exactly one language own stdin** for the lifetime of the program. Read everything from there, and pass the data across the FFI boundary as plain function arguments instead of having the other language re-read the descriptor.
-
-#### Why this isn't an FFI bug
-
-Function calls, return values, structs, pointers, memory, threads, and signals are all unaffected — those flow through the C ABI cleanly between Zig, C, and C++. The buffering issue only touches the small set of buffered streams: `stdout`, `std::cout`, `std::clog`, and any `FILE*` you opened with `fopen`. Direct `write(2)` / `read(2)` syscalls bypass libc buffers and don't have this problem either.
-
-If you want to change compiler flags or the language standard, edit the `c_flags` / `cpp_flags` constants near the top of `build.zig`. If you want to add a third language directory or a different extension, the `containsSuffix` and `getFilesFromDir` helpers already accept arbitrary extension lists; you just need another `addCSourceFiles` call in `build()`.
-
-## Why Zig instead of CMake / Make?
-
-This project uses Zig's build system in place of the usual C/C++ toolchain. The trade-offs are honest, not absolute — here's the short version.
-
-### Pros
-
-- **Single-tool install.** Zig ships the build system, a Clang-based C/C++ frontend, libc/libc++ headers, and an LLVM backend in one ~150 MB tarball. No `apt install build-essential cmake ninja-build`, no Visual Studio, no Xcode command-line tools.
-- **Cross-compilation is built in.** `zig build -Dtarget=aarch64-linux` just works — Zig bundles libc for every supported target. With CMake this typically means a sysroot, a toolchain file, and a working cross-compiler installation.
-- **Reproducible across machines.** A given Zig version produces the same binary regardless of which gcc/clang the host has installed. No "works on my machine because I'm on gcc 13" surprises.
-- **The build script is a real programming language.** You write loops, conditionals, and helper functions in Zig itself — see how `getFilesFromDir` recursively scans a directory in this repo. CMake's `function()` / `if(...)` syntax is its own DSL with its own quirks.
-- **One phase, not two.** Zig builds directly. No "configure, then generate, then build" dance like `cmake -B build && cmake --build build`.
-- **Fast, content-addressed cache.** Incremental builds are quick and stable.
-
-### Cons
-
-- **Tiny ecosystem.** Almost no upstream C/C++ library ships a `build.zig`. Most assume CMake, autotools, or Make. Pulling in a non-trivial dependency often means writing a `build.zig` shim for it yourself.
-- **Pre-1.0.** Zig's build API still changes between releases — the 0.15 → 0.16 jump alone moved C/C++ sources and libc linkage onto Modules, threaded an explicit `Io` interface through every filesystem call, switched `ArrayList` to unmanaged-by-default, and changed the signature of `pub fn main`. Code that compiles today may need a small migration after a Zig upgrade. CMake, by contrast, has decades of stability.
-- **Less community knowledge.** Stack Overflow, vendor docs, and AI training data lean *heavily* CMake/Make. When something breaks, error messages are harder to search for.
-- **Tooling integration is thinner.** CMake produces a `compile_commands.json` (used by clangd, IDEs, static analyzers) as a first-class output. Zig can produce one via `zig build --verbose` post-processing, but it's not as smooth. CTest, CPack, and CDash have no direct Zig analogs.
-- **You're tied to Zig's bundled LLVM/Clang.** If you specifically need MSVC, GCC, or a vendor-specific compiler, Zig's toolchain doesn't help.
-- **Large or dependency-heavy C++ projects suffer most.** `find_package(Boost)`, `FetchContent`, and the Conan/vcpkg ecosystem are battle-tested in CMake. The Zig equivalent is bring-your-own.
-
-### Rule of thumb
-
-- **Greenfield, small-to-mid project, want cross-compile and one tool?** Zig build is excellent.
-- **Tiny C/C++ shim called from Zig?** Zig build is the obvious choice (this repo).
-- **Existing C++ codebase with heavy deps, or a team that already knows CMake?** Stay on CMake. The migration cost rarely pays off.
-
-## Documentation note
-
-The prose in this README and the explanatory comments inside `build.zig` were written with the help of an AI assistant (Claude). The code itself was authored interactively — the AI suggested fixes, flagged bugs, and explained Zig 0.16 API changes, but the design decisions (per-language directories, auto-discovery, the build-system choice) are the project author's. Treat the docs as a starting point: if you spot something that doesn't match the code, the code is the source of truth.
+Adapter authors care about (1). Mod authors care about (2). The two aren't the same surface.
