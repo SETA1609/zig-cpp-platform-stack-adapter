@@ -1,0 +1,21 @@
+# Platform adapter C++ formatting — matches zVoxRealms's root .clang-format.
+# See zVoxRealms docs/cpp-style.md for the conventions and deviations.
+
+BasedOnStyle: Google
+Language: Cpp
+Standard: c++23
+ColumnLimit: 100
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+ContinuationIndentWidth: 4
+PointerAlignment: Left
+NamespaceIndentation: None
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Attach
+Cpp11BracedListStyle: true
+FixNamespaceComments: true
+DerivePointerAlignment: false
+SortIncludes: CaseSensitive
