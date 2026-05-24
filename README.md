@@ -28,7 +28,7 @@ zVoxRealms ([`docs/external-libs-catalog.md` § 3 Platform-stack](https://github
 3. **Exposes action-mapped input from day one.** Direct key/button reads are anti-patterns for rebindable games. `bindAction` / `actionPressed` / `actionValue` is the public surface; raw key codes stay inside the backend
 4. **Supports Input Mapping Contexts.** Stackable binding layers (gameplay / dialog / inventory / cinematic) so gameplay code never gates on "is dialog open"
 5. **Supports synthetic action injection.** Drives the same downstream path as real input — powers integration tests, scripted cutscenes, tutorial overlays
-6. **Exposes native window handles without depending on Vulkan.** Engine calls `platform.nativeHandle(window)` and passes the result to `vk_stack.createSurface(instance, handle)`. The platform adapter has **zero Vulkan dep** — a headless server, config editor, or any non-rendering tool can use this adapter without dragging vulkan-zig along. Cross-adapter dep direction: `vulkan-stack → platform-stack` (one-way data dep; no cycle)
+6. **Exposes per-OS native handle getters without depending on Vulkan or on any other adapter.** The adapter provides `getX11Handle` / `getWaylandHandle` / `getWin32Handle` / `getAndroidHandle`, each returning inline-anon structs of raw OS primitives (or `null` if the current backend isn't that OS). The renderer ([`zig-cpp-vulkan-stack-adapter`](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)) has matching `createX11Surface` / `createWaylandSurface` / etc., each taking only raw primitives. **No shared type crosses the adapter boundary** — both adapters are fully standalone. A headless server, config editor, or any non-rendering tool can use this adapter without dragging vulkan-zig along. Engine bridges via a small `src/render/surface.zig` helper that comptime-branches on `builtin.target.os.tag`. Pattern matches GLFW's `glfw3native.h` getters + Vulkan's own `VK_KHR_*_surface` extension pairs
 
 Full spec: [`docs/specs/platform.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/specs/platform.md) in the parent project.
 
@@ -44,7 +44,7 @@ These land here progressively as the adapter's roadmap advances. Each is wrapped
 
 The GLFW backend is a single file (`src/backend/glfw.zig`) — GLFW itself handles per-OS dispatch internally.
 
-**No Vulkan deps in this adapter.** The renderer (in [`zig-cpp-vulkan-stack-adapter`](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)) imports the `NativeWindowHandle` tagged union defined here and creates Vulkan surfaces itself.
+**No Vulkan deps and no cross-adapter deps.** This adapter exposes raw OS primitives only. The renderer (in [`zig-cpp-vulkan-stack-adapter`](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)) has independent per-OS surface creators that take the same raw primitives. Engine wires the two via a small `src/render/surface.zig` helper. No shared types cross the adapter boundary — each adapter is fully standalone.
 
 ### v1.x onward — pure-Zig native backends
 
