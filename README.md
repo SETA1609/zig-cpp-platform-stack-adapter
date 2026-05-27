@@ -1,149 +1,52 @@
 # zig-cpp-platform-stack-adapter
 
-A meta-package adapter exposing a **stable Zig API** for the platform layer — window, events, action-mapped input, time, file I/O, and Vulkan-surface creation. The implementation backend swaps between major versions of this sub-repo without consumers changing a line of code.
+A standalone **Zig library**: one stable, **renderer-agnostic** API for windowing, input, time, file paths, and per-OS native handles — backed by [SDL3](https://github.com/libsdl-org/SDL). Use it with **Vulkan**, **OpenGL**, or **headless**; the backend can change underneath without your code changing.
 
-**License:** [MIT](LICENSE)
-**Status:** Phase 0 (Foundation) — currently a hello-world stub. Real backend wrapping starts at [zVoxRealms](https://github.com/SETA1609/zigVoxelWorlds) Phase 1.
+**License:** [MIT](LICENSE) · **Requires:** Zig 0.16+ · **Status:** pre-1.0, single-maintainer
 
 ---
 
 ## Documentation
 
-Project docs live in [`docs/`](docs/):
-
-- [`docs/vision.md`](docs/vision.md) — what this adapter is for; why it's renderer-agnostic (Vulkan **and** OpenGL)
-- [`docs/mission.md`](docs/mission.md) — concrete commitments (the Vulkan + OpenGL + headless paths)
+- [`docs/vision.md`](docs/vision.md) — what this library is for; why it's renderer-agnostic
+- [`docs/mission.md`](docs/mission.md) — concrete commitments (Vulkan + OpenGL + headless paths)
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — versioned milestones (v0.6.0 → v1.0.0)
-- [`docs/sprint.md`](docs/sprint.md) — active sprint plan
+- [`docs/sprint.md`](docs/sprint.md) — current milestone plan
 - [`docs/validation-apps.md`](docs/validation-apps.md) — standalone test apps + completion checklist
 - [`docs/cheat_sheet.md`](docs/cheat_sheet.md) — Zig/C/C++ cross-language field guide
-
-> **Note:** the "What it is" section below still describes the older GLFW→native plan and is Vulkan-centric — superseded by [`docs/ROADMAP.md`](docs/ROADMAP.md) (SDL3, renderer-agnostic). README rewrite tracked as sprint item P1.10.
+- [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) — how to contribute (OpenGL + native-backend PRs welcome)
+- [`.github/SECURITY.md`](.github/SECURITY.md) — security policy
 
 ## What it is
 
-A standalone Zig package that consumers (engines, games, tools) import as a single dependency to get cross-platform windowing + input. Bundled in this single sub-repo are:
+A single Zig package you import as one dependency to get cross-platform windowing + input with idiomatic Zig types. Your code imports `platform` and calls a stable API; it never sees the backend. The backend is **SDL3** today and could become a native backend or a future SDL without your code changing — that decoupling is the whole reason this exists as its own library.
 
-- **Public Zig API** (`src/root.zig`) — opaque `Window`, queued `Event`, action-mapped input, time, file paths, Vulkan-surface creation
-- **One backend implementation at a time** — selected at build time by `-Dplatform_backend`
-- **Vendored external libraries** when a backend needs them (today: GLFW)
+The public surface (see [`docs/mission.md`](docs/mission.md) for the full list):
 
-Engine code never sees a backend choice — it imports `platform` and calls the stable API. Backends rotate underneath across sub-repo versions.
+- Opaque `Window` + `WindowOptions`
+- A queued `Event` union (`key` / `mouse_*` / `resize` / `focus` / `close` / `gamepad` / `text_input` / `file_drop`)
+- **Action-mapped input** — `bindAction` / `actionPressed` / `actionValue`, stackable input contexts, synthetic injection (raw key codes stay inside the backend)
+- Time, app data/cache paths, clipboard, IME, gamepad, sensor, haptic, power
+- Per-OS native handle getters + the prerequisites for Vulkan **or** OpenGL surface creation
 
-This is the second meta-package adapter under zVoxRealms; the first is [`zig-cpp-vulkan-stack-adapter`](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter). Both follow the `zig-cpp-<name>-stack-adapter` naming convention.
+## Renderer-agnostic — Vulkan, OpenGL, or headless
 
-## What it's needed for
+This library does windowing + input, **not** rendering, so it stays neutral about the GPU API. Three paths hang off the same window, chosen via `WindowOptions.renderer`:
 
-zVoxRealms ([`docs/external-libs-catalog.md` § 3 Platform-stack](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/external-libs-catalog.md)) needs a windowing + input layer that:
-
-1. **Survives the GLFW → native transition.** v0–v1.0 uses GLFW for rapid iteration. v1.x onward uses pure-Zig X11/Wayland/Win32/Android backends. Same public API across both — engine source changes nowhere
-2. **Tree-shakes per export target.** When exporting a game for Linux, Windows/macOS/Android backend code is never compiled in (per-target source selection in `build.zig`). Verifiable with `nm libzvox-runtime.so`
-3. **Exposes action-mapped input from day one.** Direct key/button reads are anti-patterns for rebindable games. `bindAction` / `actionPressed` / `actionValue` is the public surface; raw key codes stay inside the backend
-4. **Supports Input Mapping Contexts.** Stackable binding layers (gameplay / dialog / inventory / cinematic) so gameplay code never gates on "is dialog open"
-5. **Supports synthetic action injection.** Drives the same downstream path as real input — powers integration tests, scripted cutscenes, tutorial overlays
-6. **Exposes per-OS native handle getters without depending on Vulkan or on any other adapter.** The adapter provides `getX11Handle` / `getWaylandHandle` / `getWin32Handle` / `getAndroidHandle`, each returning inline-anon structs of raw OS primitives (or `null` if the current backend isn't that OS). The renderer ([`zig-cpp-vulkan-stack-adapter`](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)) has matching `createX11Surface` / `createWaylandSurface` / etc., each taking only raw primitives. **No shared type crosses the adapter boundary** — both adapters are fully standalone. A headless server, config editor, or any non-rendering tool can use this adapter without dragging vulkan-zig along. Engine bridges via a small `src/render/surface.zig` helper that comptime-branches on `builtin.target.os.tag`. Pattern matches GLFW's `glfw3native.h` getters + Vulkan's own `VK_KHR_*_surface` extension pairs
-
-Full spec: [`docs/specs/platform.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/specs/platform.md) in the parent project.
-
-## Which libraries this adapter will use and adapt
-
-These land here progressively as the adapter's roadmap advances. Each is wrapped behind the same stable Zig API.
-
-### v0–v1.0 backend — GLFW
-
-| Library | License | Role | Integration |
-| --- | --- | --- | --- |
-| [**GLFW**](https://github.com/glfw/glfw) | Zlib | Cross-platform window + input + monitor + gamepad | Vendored as a git submodule under `vendor/glfw/`; compiled by `build.zig` only when `-Dplatform_backend=glfw`. The backend calls `glfwGetX11Window`, `glfwGetWin32Window`, etc. to extract the native handle that `nativeHandle()` exposes |
-
-The GLFW backend is a single file (`src/backend/glfw.zig`) — GLFW itself handles per-OS dispatch internally.
-
-**No Vulkan deps and no cross-adapter deps.** This adapter exposes raw OS primitives only. The renderer (in [`zig-cpp-vulkan-stack-adapter`](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)) has independent per-OS surface creators that take the same raw primitives. Engine wires the two via a small `src/render/surface.zig` helper. No shared types cross the adapter boundary — each adapter is fully standalone.
-
-### v1.x onward — pure-Zig native backends
-
-The native backend ships when the engine moves past v1.0. Each OS gets its own file, selected at build time per target:
-
-| Library / Subsystem | Where | Wrapped how |
+| Path | The library gives you | For |
 | --- | --- | --- |
-| [**xcb / Xlib**](https://xcb.freedesktop.org/) (X11) | `src/backend/native/linux_x11.zig` | Pure-Zig `extern fn` calls; no C wrapping needed for X11 |
-| [**Wayland protocols**](https://wayland.app/) | `src/backend/native/linux_wayland.zig` | Pure-Zig protocol implementation against `libwayland-client`; XML protocol descriptions compiled to Zig at build time |
-| [**Win32 API**](https://learn.microsoft.com/en-us/windows/win32/api/) | `src/backend/native/windows.zig` | Pure-Zig via `std.os.windows` + `extern fn` for user32/gdi32/xinput |
-| **AInputQueue / ANativeWindow** (Android NDK) | `src/backend/native/android.zig` | Pure-Zig NDK bindings; activity lifecycle hooks |
-| **NSWindow / Cocoa** (macOS) | _deferred_ — `mission.md` defers macOS post-v1.0 | Likely Objective-C runtime via `objc.zig` |
+| **`.vulkan`** | per-OS native handle getters + `requiredVulkanInstanceExtensions()` (raw primitives, no Vulkan types) | your Vulkan renderer / a Vulkan-stack adapter |
+| **`.opengl`** | a managed GL context + `glSwapWindow` + `glGetProcAddress` + swap-interval | any OpenGL renderer (the GL loader lives in your code) |
+| **`.none`** | window + events only | headless tools, custom 2D |
 
-The native backend has no C dependencies — it replaces GLFW entirely. The migration trigger is bumping this sub-repo from v1.x to v2.0 in the consumer's `build.zig.zon`. Engine source changes nowhere across the swap.
+You are **not** forced onto Vulkan. The OpenGL path is fully supported, and it lets you migrate a renderer **from OpenGL to Vulkan in stages** — keep GL shipping while you build the Vulkan path against the same windowing API, then flip. (Honest limit: a window binds to one GPU API at creation; this is for *switching* renderers, not mixing GL + Vulkan in one window.)
 
-### Optional supporting libraries (under evaluation)
-
-| Library | License | Why we might adopt |
-| --- | --- | --- |
-| **libxkbcommon** | MIT | If pure-Zig X11/Wayland keymap code becomes too painful, libxkbcommon is the universal Linux input keymap layer |
-| **libudev** | LGPL | ❌ rejected — LGPL is forbidden per [`licensing.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/licensing.md). Gamepad hotplug events handled via `/dev/input/event*` polling or `epoll` on `/sys/class/input/` |
-| **wayland-protocols XML** | MIT | Pre-compiled Zig bindings from the protocol XMLs; build-time generator |
-
-LGPL libraries (libudev, libnice, gettext libintl) are explicitly forbidden per the parent project's licensing policy. The pure-Zig native backend implements equivalent functionality from primitives instead.
-
----
-
-## Current state — Phase 0 hello-world
-
-The repo currently contains a Zig + C + C++ hello-world stub inherited from the build template, plus:
-
-- `LICENSE` — MIT
-- `.clang-format` — Google C++ baseline + zVoxRealms tweaks (matches root project's [`docs/cpp-style.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/cpp-style.md))
-- `build.zig.zon` — package manifest
-
-Real platform wrapping has not started yet. Track progress at [zVoxRealms ROADMAP § Phase 1](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/ROADMAP.md).
-
-## Planned layout (target — not yet on disk)
-
-```text
-.
-├── LICENSE
-├── README.md
-├── .clang-format
-├── build.zig                          # per-target backend selection
-├── build.zig.zon
-├── src/
-│   ├── root.zig                       # public API — re-exports from `backend` module
-│   ├── common.zig                     # shared types: Event, KeyCode, WindowOptions, ActionId
-│   ├── action_input.zig               # action-mapping + Input Mapping Contexts + synthetic injection
-│   ├── native_handle.zig              # per-backend native window handle extraction
-│   ├── backend/
-│   │   ├── glfw.zig                   # v0 backend — single file
-│   │   └── native/                    # v1.x backend — file per OS
-│   │       ├── linux.zig              # runtime-dispatches X11 vs Wayland
-│   │       ├── linux_x11.zig
-│   │       ├── linux_wayland.zig
-│   │       ├── windows.zig
-│   │       ├── macos.zig              # deferred post-v1.0
-│   │       └── android.zig
-│   └── tests/                         # integration tests against the public API
-└── vendor/
-    └── glfw/                          # external lib as git submodule
-                                       # compiled only when backend=glfw
-```
-
-`vendor/glfw/` is a **vendored dependency** of the adapter, not a sub-library. Structurally identical to how the Vulkan-stack adapter vendors its C++ libs.
-
-## Build (template / hello-world)
-
-```sh
-zig build run
-```
-
-Requires **Zig 0.16 or newer**. The build script and `main.zig` use post-0.16 APIs (the `Io` interface, the `Module`-based `addExecutable`, the unmanaged `ArrayList`, and `pub fn main(init: std.process.Init)`).
-
-When backend selection lands, the build will add a `-Dplatform_backend=glfw|native` option.
-
-## Consuming this adapter
-
-When real wrapping lands, consumers will use:
+## Quick start
 
 ```zig
-// In your build.zig.zon
+// build.zig.zon
 .dependencies = .{
-    .platform_stack_adapter = .{
+    .platform = .{
         .url = "git+https://github.com/SETA1609/zig-cpp-platform-stack-adapter.git#<tag>",
         .hash = "...",
     },
@@ -151,32 +54,38 @@ When real wrapping lands, consumers will use:
 ```
 
 ```zig
-// In your Zig code
 const platform = @import("platform");
 
 const window = try platform.Window.create(.{
-    .title = "my game",
+    .title = "my app",
     .size = .{ .w = 1280, .h = 720 },
-    .vulkan_compatible = true,
+    .renderer = .vulkan,   // or .opengl, or .none
 });
+defer platform.Window.destroy(window);
 
-if (platform.actionPressed(.jump)) player.jump();
+platform.bindAction(.menu_pause, .{ .key = .escape });
+while (!window.shouldClose()) {
+    platform.pollAllEvents();
+    if (platform.actionJustPressed(.menu_pause)) break;
+    // ... render with your GPU API of choice ...
+}
 ```
 
-## Cross-reference
+## Backends
 
-- Parent project: [zVoxRealms](https://github.com/SETA1609/zigVoxelWorlds)
-- Catalog entry: [`docs/external-libs-catalog.md` § 3 Platform-stack](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/external-libs-catalog.md)
-- API contract: [`docs/specs/platform.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/specs/platform.md)
-- Sibling adapter: [zig-cpp-vulkan-stack-adapter](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)
-- Licensing policy: [`docs/licensing.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/licensing.md)
-- C++ style: [`docs/cpp-style.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/cpp-style.md)
+| Backend | Status |
+| --- | --- |
+| **SDL3** (zlib) — via [`castholm/SDL`](https://github.com/castholm/SDL), pinned in `build.zig.zon` | active, default |
+| Pure-Zig native (X11/Wayland/Win32/Android) | **not maintainer-led** — a solid, tested PR is welcome; the `backend/native/` slot exists for it. See [CONTRIBUTING](.github/CONTRIBUTING.md). |
 
-## Adapter pattern note — the two C ABIs
+## Design rules (what keeps a backend swap cheap)
 
-zVoxRealms has two distinct `extern "C"` surfaces and this adapter touches one of them:
+1. The API is shaped to your app's needs, not the backend's idioms — no `SDL_*` types cross it.
+2. Per-OS native handle getters return raw primitives; no shared type with any renderer library.
+3. Engine-canonical behavior, with honest per-OS divergence exposed as capability flags.
+4. Integration tests run against every supported backend.
 
-1. **Internal adapter bridge** (this repo) — when a backend has C++ pieces (none today; possibly some macOS Objective-C++ later), they're wrapped in `extern "C"` and re-exported as idiomatic Zig types
-2. **Public mod/script ABI** — a separate concern, lives in the parent project's `docs/specs/c-abi.md`. Not consumed by this adapter
+## Companion & origin
 
-Adapter authors care about (1). Mod authors care about (2). The two aren't the same surface.
+- Companion: [zig-cpp-vulkan-stack-adapter](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter) — pair the two for a full window→Vulkan-surface path (each is usable alone).
+- Built for and used by the [zVoxRealms](https://github.com/SETA1609/zigVoxelWorlds) engine project, but designed to **stand alone** — usable in any Zig project. Deeper design rationale lives in that project's platform spec.

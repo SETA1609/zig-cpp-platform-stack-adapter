@@ -1,46 +1,47 @@
 # Validation apps — zig-cpp-platform-stack-adapter
 
-> Small standalone apps that consume this adapter via `build.zig.zon` **exactly the way the engine will** — to validate the public Zig API (and, for paired apps, the engine's `surface.zig` bridge) *before* the engine exists. Each is a throwaway project in its own directory/repo, not part of the engine.
+> Small standalone apps that consume this library via `build.zig.zon` **the way a real consumer will** — to exercise the public Zig API (and, for paired apps, a consumer's surface-creation bridge). Each is a throwaway project in its own directory, not part of the library.
 >
-> **Complementary to the reference-C++-host track** ([zVoxRealms `external-libs-catalog.md` § 5.5](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/external-libs-catalog.md)). That track drops the adapter into a reference C++ host (a voxel engine) to validate the *C ABI + build wiring* against real workloads. A C++ host uses its own windowing/GL stack, so it **cannot** exercise *this adapter's* public Zig API or the surface bridge — these mini-apps are the only thing that does.
+> These complement testing the library inside a larger host application: a C++ host (or any app using its own windowing/GL stack) **can't** exercise *this library's* Zig API or the renderer-handoff path — these mini-apps are the only thing that does.
 >
-> Roadmap + version gates: [`ROADMAP.md`](ROADMAP.md). Sprint: [`sprint.md`](sprint.md).
+> Version gates: [`ROADMAP.md`](ROADMAP.md). Milestone plan: [`sprint.md`](sprint.md).
 
 ## Completion checklist
 
 Mark `[x]` only when the app **builds and runs correctly** — not merely compiles. `[~]` = in progress.
 
-- [ ] **Event logger** — window + every `Event` + `actionPressed` to stdout · *platform v0.6.0*
-- [ ] **`nm` decoupling check** — Event-logger binary shows **zero `vk*` symbols** · *platform v0.6.0*
-- [ ] **GL clear-color** — SDL3 GL context + `glClear`/`glSwapWindow`, no Vulkan (proves the OpenGL path) · *platform v0.6.0*
-- [ ] **Reactive clear-color** — bg color follows mouse / cycles on keypress (paired with vulkan-stack) · *platform v0.6.0 + vulkan v0.2.0*
-- [ ] **Snake** — grid of quads, fixed-timestep loop, action input (paired) · *platform v0.6.0 + vulkan v0.3.0*
-- [ ] **Tetris** — pause menu pushes `ui_menu` context, masking gameplay actions (paired) · *platform v0.7.0 + vulkan v0.3.0*
-- [ ] **Pong (2-player, gamepads)** — two gamepads + analog axes with modifiers (paired) · *platform v0.8.0 + vulkan v0.3.0*
-- [ ] **Gamepad tester** — axes/buttons + deadzone/smooth/scale/invert printout · *platform v0.8.0*
+- [ ] **Event logger** — window + every `Event` + `actionPressed` to stdout · *v0.6.0*
+- [ ] **`nm` decoupling check** — Event-logger binary shows **zero `vk*` symbols** · *v0.6.0*
+- [ ] **GL clear-color** — `renderer=.opengl`, GL context + `glClear`/`glSwapWindow`, no Vulkan · *v0.6.0*
+- [ ] **Vulkan clear-color** — `renderer=.vulkan` → surface → swapchain clear (pair with a Vulkan renderer) · *v0.6.0 + a Vulkan renderer*
+- [ ] **Snake** — grid of quads, fixed-timestep loop, action input · *v0.6.0 + a renderer*
+- [ ] **Tetris** — pause menu pushes `ui_menu` context, masking gameplay actions · *v0.7.0 + a renderer*
+- [ ] **Pong (2-player, gamepads)** — two gamepads + analog axes with modifiers · *v0.8.0 + a renderer*
+- [ ] **Gamepad tester** — axes/buttons + deadzone/smooth/scale/invert printout · *v0.8.0*
 
 ## The ladder — what each app validates
 
-| App | Needs | Validates (for this adapter) | Paired? |
+| App | Needs | Validates | Renderer? |
 | --- | --- | --- | --- |
-| **Event logger** | platform v0.6.0 | Window lifecycle (`create`/`destroy`/`shouldClose`), the `SDL_PollEvent → Event` union mapping, minimal action binding. **Runs first** — before any Vulkan exists. | no |
-| **GL clear-color** | platform v0.6.0 | The **OpenGL path**: `renderer = .opengl` → `glCreateContext` → consumer loads GL via `glGetProcAddress` → `glClear` + `glSwapWindow`. Proves the adapter serves OpenGL with zero Vulkan involvement — the floor for a staged GL→Vulkan renderer port. Run it next to **Reactive clear-color** (Vulkan) against the *same* adapter build to prove renderer-agnosticism. | no |
-| **Reactive clear-color** | + vulkan v0.2.0 | The native-handle getters + `requiredVulkanInstanceExtensions()` feed the engine `surface.zig` bridge → `createX11Surface` etc. **The key proof the decoupled two-adapter pairing works end to end.** Also swapchain-recreate on `.resize`. | yes |
-| **Snake** | + vulkan v0.3.0 | Window + input + `now()` timing under a real fixed-timestep game loop. | yes |
-| **Tetris** | + vulkan v0.3.0 | **Input Mapping Contexts** — push `ui_menu` on pause (masks gameplay actions), pop on resume. The one app that proves the context stack. (needs platform v0.7.0) | yes |
-| **Pong (2-player)** | + vulkan v0.3.0 | Multi-gamepad; analog axis with deadzone/smooth/scale/invert. Stresses the input layer specifically. (needs platform v0.8.0) | yes |
-| **Gamepad tester** | platform v0.8.0 | Gamepad enumeration + hotplug events + axis-modifier math, printed — no rendering. | no |
+| **Event logger** | v0.6.0 | Window lifecycle (`create`/`destroy`/`shouldClose`), the `SDL_PollEvent → Event` mapping, minimal action binding. **Runs first** — no GPU API involved. | none |
+| **GL clear-color** | v0.6.0 | The **OpenGL path**: `renderer = .opengl` → `glCreateContext` → load GL via `glGetProcAddress` → `glClear` + `glSwapWindow`. Proves the library serves OpenGL with zero Vulkan involvement. | OpenGL |
+| **Vulkan clear-color** | v0.6.0 | The **Vulkan path**: native-handle getters + `requiredVulkanInstanceExtensions()` feed a surface creator → swapchain clear → present; swapchain-recreate on `.resize`. Run it beside **GL clear-color** against the *same* library build to prove renderer-agnosticism. | Vulkan |
+| **Snake** | v0.6.0 | Window + input + `now()` timing under a real fixed-timestep game loop. | any |
+| **Tetris** | v0.7.0 | **Input Mapping Contexts** — push `ui_menu` on pause (masks gameplay actions), pop on resume. The one app that proves the context stack. | any |
+| **Pong (2-player)** | v0.8.0 | Multi-gamepad; analog axis with deadzone/smooth/scale/invert. Stresses the input layer. | any |
+| **Gamepad tester** | v0.8.0 | Gamepad enumeration + hotplug events + axis-modifier math, printed — no rendering. | none |
 
 ## Required decoupling check (`nm`)
 
-The architecture rests on this adapter dragging **no Vulkan**. After building the **Event logger**:
+This library must drag **no GPU API** into a binary that doesn't ask for one. After building the **Event logger** (`renderer = .none`):
 
 ```sh
 nm <event-logger-binary> | grep -i 'vk[A-Z]\|VK_'   # must print NOTHING
 ```
 
-A non-empty result means a Vulkan symbol leaked across the boundary — fix it now, in a ~200-line app, not in the engine.
+A non-empty result means a Vulkan symbol leaked across the boundary — fix it now, in a ~200-line app.
 
-## Discipline
+## Notes
 
-Per [zVoxRealms `docs/guard.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/guard.md): **you write these apps by hand** (learning project). They live outside the engine tree and depend on this adapter (and, for paired apps, the [vulkan-stack adapter](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)) via pinned `build.zig.zon` entries — the same consumption pattern the engine uses. The "spinning textured cube" is deliberately **not** on this list: that's the engine's own Phase 1 milestone, so these stay 2D (quads + ortho).
+- Apps depend on this library (and, for paired apps, a Vulkan renderer such as the companion [vulkan-stack adapter](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)) via pinned `build.zig.zon` entries — the same pattern a real consumer uses.
+- Tests stay 2D (quads + ortho) on purpose — they exercise *this library*, not a full 3D renderer.

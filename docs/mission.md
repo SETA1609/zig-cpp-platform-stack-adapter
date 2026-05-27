@@ -1,12 +1,12 @@
 # Mission — zig-cpp-platform-stack-adapter
 
-> The concrete commitments that turn the [vision](vision.md) into a shipped adapter. Backed by **SDL3** via [`castholm/SDL`](https://github.com/castholm/SDL). Full API contract: [zVoxRealms `docs/specs/platform.md`](https://github.com/SETA1609/zigVoxelWorlds/blob/main/docs/specs/platform.md).
+> The concrete commitments that turn the [vision](vision.md) into a shipped library. Backed by **SDL3** via [`castholm/SDL`](https://github.com/castholm/SDL).
 
 ## What we will build
 
-1. **A stable Zig API to the engine's needs, not SDL3's idioms** — `Window`, `Event` union, action-mapped input, time, file paths, native handles. No `SDL_*` type crosses the boundary (design Rule 1).
+1. **A stable Zig API shaped to the consumer's needs, not SDL3's idioms** — `Window`, an `Event` union, action-mapped input, time, file paths, native handles. No `SDL_*` type crosses the boundary.
 
-2. **Renderer chosen at window creation.** SDL needs `SDL_WINDOW_VULKAN` vs `SDL_WINDOW_OPENGL` set at creation, so it's a `WindowOptions` field:
+2. **Renderer chosen at window creation.** SDL binds a window to one GPU API (`SDL_WINDOW_VULKAN` vs `SDL_WINDOW_OPENGL`) at creation, so the choice is a `WindowOptions` field:
    ```zig
    pub const Renderer = enum { none, vulkan, opengl };
    // WindowOptions.renderer: Renderer = .vulkan
@@ -22,9 +22,9 @@
    pub fn glSetSwapInterval(interval: i32) void;          // vsync
    pub fn glGetProcAddress(name: [*:0]const u8) ?*const anyopaque;
    ```
-   All SDL3-backed (`SDL_GL_*`). The GL loader (glad / a zig-opengl binding) lives in the *consumer*, fed by `glGetProcAddress` — this adapter ships no GL bindings.
+   All SDL3-backed (`SDL_GL_*`). The GL loader (glad / a zig-opengl binding) lives in the **consumer**, fed by `glGetProcAddress` — this library ships no GL bindings.
 
-5. **The four design rules upheld** (API-to-engine-needs · decoupled handles · honest divergence via capability flags · tests-per-backend) — see the spec.
+5. **The four design rules upheld** (API-to-consumer-needs · decoupled handles · honest divergence via capability flags · tests-per-backend).
 
 ## The staged OpenGL → Vulkan migration this enables
 
@@ -34,14 +34,14 @@ The point of the GL path is **not** mixing GL and Vulkan in one window — SDL b
 2. A Vulkan renderer is built up against the **same platform API** (`renderer = .vulkan`), behind a build flag or on a separate window.
 3. When the Vulkan path reaches parity, flip the window's `renderer` and retire the GL path.
 
-The platform adapter is the unchanged floor under all three steps. That is what "written so OpenGL works" buys: the freedom to migrate a renderer without first rewriting windowing/input.
+The platform library is the unchanged floor under all three steps. That is what "designed so OpenGL works" buys: the freedom to migrate a renderer without first rewriting windowing/input.
 
 ## Success criteria
 
-- Every app in [`validation-apps.md`](validation-apps.md) builds and runs — including a **GL clear-color** app and a **Vulkan clear-color** app against the *same* adapter build.
+- Every app in [`validation-apps.md`](validation-apps.md) builds and runs — including a **GL clear-color** app and a **Vulkan clear-color** app against the *same* library build.
 - The `nm` decoupling check passes (no GPU-API symbols in a headless binary).
-- A backend swap (SDL3 → anything) would touch zero consumer source.
+- A backend swap (SDL3 → anything) touches zero consumer source.
 
 ## Non-goals
 
-Rendering · GL/Vulkan bindings · asset loading · the engine's input-context *semantics* (the adapter provides the mechanism; the engine wires dialog/inventory/cutscene policy per the spec).
+Rendering · GL/Vulkan bindings · asset loading · a consumer's input-context *policy* (the library provides the mechanism; the consumer wires which contexts apply when).
