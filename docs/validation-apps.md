@@ -12,6 +12,7 @@ Mark `[x]` only when the app **builds and runs correctly** — not merely compil
 
 - [ ] **Event logger** — window + every `Event` + `actionPressed` to stdout · *platform v0.6.0*
 - [ ] **`nm` decoupling check** — Event-logger binary shows **zero `vk*` symbols** · *platform v0.6.0*
+- [ ] **GL clear-color** — SDL3 GL context + `glClear`/`glSwapWindow`, no Vulkan (proves the OpenGL path) · *platform v0.6.0*
 - [ ] **Reactive clear-color** — bg color follows mouse / cycles on keypress (paired with vulkan-stack) · *platform v0.6.0 + vulkan v0.2.0*
 - [ ] **Snake** — grid of quads, fixed-timestep loop, action input (paired) · *platform v0.6.0 + vulkan v0.3.0*
 - [ ] **Tetris** — pause menu pushes `ui_menu` context, masking gameplay actions (paired) · *platform v0.7.0 + vulkan v0.3.0*
@@ -23,6 +24,7 @@ Mark `[x]` only when the app **builds and runs correctly** — not merely compil
 | App | Needs | Validates (for this adapter) | Paired? |
 | --- | --- | --- | --- |
 | **Event logger** | platform v0.6.0 | Window lifecycle (`create`/`destroy`/`shouldClose`), the `SDL_PollEvent → Event` union mapping, minimal action binding. **Runs first** — before any Vulkan exists. | no |
+| **GL clear-color** | platform v0.6.0 | The **OpenGL path**: `renderer = .opengl` → `glCreateContext` → consumer loads GL via `glGetProcAddress` → `glClear` + `glSwapWindow`. Proves the adapter serves OpenGL with zero Vulkan involvement — the floor for a staged GL→Vulkan renderer port. Run it next to **Reactive clear-color** (Vulkan) against the *same* adapter build to prove renderer-agnosticism. | no |
 | **Reactive clear-color** | + vulkan v0.2.0 | The native-handle getters + `requiredVulkanInstanceExtensions()` feed the engine `surface.zig` bridge → `createX11Surface` etc. **The key proof the decoupled two-adapter pairing works end to end.** Also swapchain-recreate on `.resize`. | yes |
 | **Snake** | + vulkan v0.3.0 | Window + input + `now()` timing under a real fixed-timestep game loop. | yes |
 | **Tetris** | + vulkan v0.3.0 | **Input Mapping Contexts** — push `ui_menu` on pause (masks gameplay actions), pop on resume. The one app that proves the context stack. (needs platform v0.7.0) | yes |

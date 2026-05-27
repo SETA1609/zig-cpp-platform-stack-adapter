@@ -7,6 +7,19 @@ A meta-package adapter exposing a **stable Zig API** for the platform layer — 
 
 ---
 
+## Documentation
+
+Project docs live in [`docs/`](docs/):
+
+- [`docs/vision.md`](docs/vision.md) — what this adapter is for; why it's renderer-agnostic (Vulkan **and** OpenGL)
+- [`docs/mission.md`](docs/mission.md) — concrete commitments (the Vulkan + OpenGL + headless paths)
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — versioned milestones (v0.6.0 → v1.0.0)
+- [`docs/sprint.md`](docs/sprint.md) — active sprint plan
+- [`docs/validation-apps.md`](docs/validation-apps.md) — standalone test apps + completion checklist
+- [`docs/cheat_sheet.md`](docs/cheat_sheet.md) — Zig/C/C++ cross-language field guide
+
+> **Note:** the "What it is" section below still describes the older GLFW→native plan and is Vulkan-centric — superseded by [`docs/ROADMAP.md`](docs/ROADMAP.md) (SDL3, renderer-agnostic). README rewrite tracked as sprint item P1.10.
+
 ## What it is
 
 A standalone Zig package that consumers (engines, games, tools) import as a single dependency to get cross-platform windowing + input. Bundled in this single sub-repo are:
