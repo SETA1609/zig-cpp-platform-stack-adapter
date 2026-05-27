@@ -13,6 +13,7 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — versioned milestones (v0.6.0 → v1.0.0)
 - [`docs/sprint.md`](docs/sprint.md) — current milestone plan
 - [`docs/validation-apps.md`](docs/validation-apps.md) — standalone test apps + completion checklist
+- [`docs/dependencies.md`](docs/dependencies.md) — consumed libraries + Zig/C/C++ language split
 - [`docs/cheat_sheet.md`](docs/cheat_sheet.md) — Zig/C/C++ cross-language field guide
 - [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) — how to contribute (OpenGL + native-backend PRs welcome)
 - [`.github/SECURITY.md`](.github/SECURITY.md) — security policy
