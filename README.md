@@ -10,6 +10,7 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 
 - [`docs/vision.md`](docs/vision.md) — what this library is for; why it's renderer-agnostic
 - [`docs/mission.md`](docs/mission.md) — concrete commitments (Vulkan + OpenGL + headless paths)
+- [`docs/api.md`](docs/api.md) — intended public API surface (signatures + semantics)
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — versioned milestones (v0.6.0 → v1.0.0)
 - [`docs/sprint.md`](docs/sprint.md) — current milestone plan
 - [`docs/validation-apps.md`](docs/validation-apps.md) — standalone test apps + completion checklist
