@@ -4,32 +4,35 @@
     .name = .platform_stack_adapter,
 
     // SemVer. Bumps with breaking changes to the public Zig API
-    // (root.zig re-exports). Backend swaps (GLFW v0 → native v1.x)
-    // bump the MAJOR version.
+    // (root.zig re-exports). Backend swaps (SDL3 → native) bump the
+    // MAJOR version.
     .version = "0.0.0",
 
     // Stable u64 fingerprint identifying this package across renames
     // and forks. Generated once and kept constant. `zig fetch --save`
     // can regenerate; not required.
-    .fingerprint = 0x7a36b9c4e1f2a5d8,
+    .fingerprint = 0x5a299f6591d1ee63,
 
     // Minimum Zig version that can build this package.
     .minimum_zig_version = "0.16.0",
 
-    // Zig dependencies. Empty at Phase 0 and intentionally stays narrow.
+    // Zig dependencies. Intentionally narrow.
+    //
     // This adapter has NO Vulkan dependency — per-OS native handle
     // getters return inline-anon structs of raw OS primitives; the
     // engine pairs them with vulkan-stack's matching per-OS surface
     // creators in a small render/surface.zig helper. See README.md
     // and the parent project's docs/specs/platform.md § Rule 2.
     //
-    // GLFW (Zlib) is vendored as a git submodule under vendor/glfw/
-    // for the v0 backend and compiled by build.zig directly — not
-    // a Zig package dep.
-    .dependencies = .{},
-
-    // Files included when this package is fetched as a dependency
-    // (e.g. via `zig fetch --save`).
+    // SDL3 is built via castholm/SDL — packages SDL's C sources for
+    // the Zig build system and exposes the `SDL3` artifact. Pinned by
+    // `zig fetch --save`. See docs/dependencies.md.
+    .dependencies = .{
+        .sdl = .{
+            .url = "git+https://github.com/castholm/SDL.git?ref=v0.5.0+3.4.8#21c6b79840d123e94a9f183f4b0fa1731668f48d",
+            .hash = "sdl-0.5.0+3.4.8-SDL--k4DpgH323IfF6cEaGzKUdtUQv1azbBmmcv0RMAu",
+        },
+    },
     .paths = .{
         "build.zig",
         "build.zig.zon",
