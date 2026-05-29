@@ -5,11 +5,25 @@
 > ```zig
 > const platform = @import("platform");
 > ```
+>
+> **Now authored:** this surface lives as code in [`../src/root.zig`](../src/root.zig) (functions) and [`../src/common.zig`](../src/common.zig) (types), with doc-comments matching the descriptions below. Every function is a `@panic("not implemented")` stub until the SDL3 backend lands. Numeric values for the enums (for serialization / rebindable bindings) are in [`enum-values.md`](enum-values.md).
 
 ## Conventions
 
 - Errors use Zig error unions (`!T`); absence uses optionals (`?T`).
 - **No backend type (`SDL_*`) ever appears in this surface** (design Rule 1).
+
+> **Note for the future — error sets.** The fallible functions currently use
+> *inferred* error sets (`!T`). One day, the library-grade move is to pin
+> **explicit named error sets** per area (e.g. `InitError!void`,
+> `WindowError!*Window`, `PathError![]u8`, `GlError!*GlContext`) — as
+> `shaderc.Error` already does in the companion lib — so the error contract is
+> documented and a consumer can exhaustively `switch` on it.
+> **Counter-argument (why not yet):** defining that taxonomy now means
+> *guessing* failure modes before the SDL3 backend exists, and a premature set
+> tends to churn. The pragmatic path is to keep sets inferred while the backend
+> is built, then **lock explicit named sets at v1.0** once the real failures are
+> known. Revisit this at the 1.0 stabilization pass.
 - Allocator-taking functions return caller-owned memory — free it.
 - Window operations are shown as decls on the `Window` opaque (method syntax). You could equally expose them as module-level free functions taking `*Window` — the signatures are the same either way.
 
@@ -73,7 +87,10 @@ pub const Event = union(enum) {
 };
 
 pub fn pollAllEvents() void;        // drive the backend pump once per frame
-pub fn nextEvent() ?Event;          // drain the queue; null when empty
+
+// Two ways to consume the frame's events — pick one per frame:
+pub fn nextEvent() ?Event;          // (1) AoS: drain the queue; null when empty
+pub fn events() EventFrame;         // (2) SoA: per-type slices for batch processing
 
 // Payloads are plain structs, e.g.:
 pub const KeyEvent = struct { code: KeyCode, pressed: bool, repeat: bool, mods: KeyMods };
@@ -81,6 +98,25 @@ pub const MouseMotionEvent = struct { x: f32, y: f32, dx: f32, dy: f32 };
 pub const ResizeEvent = struct { w: u32, h: u32 };
 // MouseButton/Scroll/Focus/Gamepad/TextInput/FileDrop events follow the same pattern.
 ```
+
+`nextEvent` is the ergonomic array-of-structs path. `events` is its data-oriented counterpart — a struct-of-arrays view of the *same* captured frame, grouped by type so you can process events in homogeneous batches with no per-event tag dispatch:
+
+```zig
+pub const EventFrame = struct {
+    keys:           []const KeyEvent,
+    mouse_buttons:  []const MouseButtonEvent,
+    mouse_motions:  []const MouseMotionEvent,
+    mouse_scrolls:  []const MouseScrollEvent,
+    resizes:        []const ResizeEvent,
+    focuses:        []const FocusEvent,
+    close_requested: bool,            // payload-less → a flag, not a slice
+    gamepads:       []const GamepadEvent,    // since v0.8.0
+    text_inputs:    []const TextInputEvent,  // since v0.8.0
+    file_drops:     []const FileDropEvent,   // since v0.8.0
+};
+```
+
+Every slice borrows backend storage valid only until the next `pollAllEvents()` — copy out anything you keep. The two views see the same events; `nextEvent` consumes the queue while `events` is non-consuming, so use one style per frame to avoid double-handling.
 
 ## Action-mapped input
 

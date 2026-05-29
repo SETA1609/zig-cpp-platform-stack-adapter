@@ -4,6 +4,13 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 
 **License:** [MIT](LICENSE) · **Requires:** Zig 0.16+ · **Status:** pre-1.0, single-maintainer
 
+> **Status detail:** the full public API surface is authored and documented in
+> `src/root.zig` (functions) + `src/common.zig` (types) — every function is a
+> `@panic("not implemented")` stub awaiting the SDL3 backend (milestone
+> v0.6.0, see [`docs/sprint.md`](docs/sprint.md)). Consumers can `@import`,
+> build, and wire against the real signatures today; calling an unimplemented
+> function traps at runtime with a clear message.
+
 ---
 
 ## Documentation
@@ -11,6 +18,7 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 - [`docs/vision.md`](docs/vision.md) — what this library is for; why it's renderer-agnostic
 - [`docs/mission.md`](docs/mission.md) — concrete commitments (Vulkan + OpenGL + headless paths)
 - [`docs/api.md`](docs/api.md) — intended public API surface (signatures + semantics)
+- [`docs/enum-values.md`](docs/enum-values.md) — stable enum name→value maps (for TOML/JSON bindings & serialization)
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — versioned milestones (v0.6.0 → v1.0.0)
 - [`docs/sprint.md`](docs/sprint.md) — current milestone plan
 - [`docs/validation-apps.md`](docs/validation-apps.md) — standalone test apps + completion checklist
