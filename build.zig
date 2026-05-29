@@ -41,4 +41,36 @@ pub fn build(b: *std.Build) void {
         .root_module = platform_mod,
     });
     b.installArtifact(platform_lib);
+
+    // --- `zig build run` ----------------------------------------------------
+    // A smoke demo that imports the module as a consumer would. Prints library
+    // info without calling the stubbed backend (see demo/main.zig).
+    const demo_mod = b.createModule(.{
+        .root_source_file = b.path("demo/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    demo_mod.addImport("platform", platform_mod);
+    demo_mod.linkLibrary(platform_lib);
+    const demo = b.addExecutable(.{ .name = "smoke", .root_module = demo_mod });
+    b.installArtifact(demo);
+    const run_cmd = b.addRunArtifact(demo);
+    run_cmd.step.dependOn(b.getInstallStep());
+    if (b.args) |args| run_cmd.addArgs(args);
+    b.step("run", "Build + run the smoke demo").dependOn(&run_cmd.step);
+
+    // --- `zig build test` ---------------------------------------------------
+    // Unit tests for the public surface. Data/contract tests run today;
+    // behavioral tests are skipped until the SDL3 backend lands (see
+    // src/tests/api_test.zig). CI gates merges to `main` on this step.
+    const test_mod = b.createModule(.{
+        .root_source_file = b.path("src/tests/api_test.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    test_mod.addImport("platform", platform_mod);
+    const tests = b.addTest(.{ .root_module = test_mod });
+    const run_tests = b.addRunArtifact(tests);
+    b.step("test", "Run the platform unit tests")
+        .dependOn(&run_tests.step);
 }
