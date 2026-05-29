@@ -1,5 +1,8 @@
 name: build
 
+# Runs on every push to main and on every PR targeting main. The `Test` step
+# is the merge gate: enable it as a required status check in the repo's branch
+# protection for `main` so a PR cannot merge until it is green.
 on:
   push:
     branches: [main]
@@ -25,8 +28,19 @@ jobs:
       - name: zig version
         run: zig version
 
+      # Formatting gate (run before build so no generated dirs are scanned).
+      - name: Format check
+        run: zig fmt --check build.zig build.zig.zon src
+
+      # Build the static library (compiles SDL3 once).
       - name: Build
         run: zig build
 
+      # Smoke demo — builds + runs a consumer of the module (see demo/main.zig).
       - name: Run
         run: zig build run
+
+      # Unit tests — the merge gate. Data/contract tests run; backend
+      # behavioral tests skip until implemented (see src/tests/api_test.zig).
+      - name: Test
+        run: zig build test
