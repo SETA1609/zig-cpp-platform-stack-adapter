@@ -73,4 +73,23 @@ pub fn build(b: *std.Build) void {
     const run_tests = b.addRunArtifact(tests);
     b.step("test", "Run the platform unit tests")
         .dependOn(&run_tests.step);
+
+    // --- `zig build test-tdd` -----------------------------------------------
+    // Ordered red→green TDD suite (src/tests/tdd/, one file per function group,
+    // in implementation order). Every test calls a real function and asserts
+    // its result, but is gated behind a per-function `done` flag so it SKIPS
+    // until implemented — so this step is green (all skipped) today and a
+    // contributor flips one flag, makes that function pass, and PRs it (see
+    // CONTRIBUTING.md). Kept off CI's `test` step; needs a display server.
+    // Focus the loop with `zig build test-tdd -- --test-filter <name>`.
+    const tdd_mod = b.createModule(.{
+        .root_source_file = b.path("src/tests/tdd/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    tdd_mod.addImport("platform", platform_mod);
+    const tdd_tests = b.addTest(.{ .root_module = tdd_mod });
+    const run_tdd_tests = b.addRunArtifact(tdd_tests);
+    b.step("test-tdd", "Run the red→green TDD suite (fails until the backend is implemented)")
+        .dependOn(&run_tdd_tests.step);
 }
