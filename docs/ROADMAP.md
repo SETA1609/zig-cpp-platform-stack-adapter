@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | v0.x – v0.5 | GLFW (zlib) — hello-world only | Superseded |
 | **v0.6 onward** | **SDL3** (zlib core) via the [`castholm/SDL`](https://github.com/castholm/SDL) `build.zig.zon` dependency (pinned; HIDAPI elected BSD-3-Clause) | **Active** |
-| Pure-Zig native (X11/Wayland/Win32/Android) | — | **Not maintainer-led** — a solid, tested PR is welcome ([CONTRIBUTING](../.github/CONTRIBUTING.md)) |
+| Pure-Zig native (X11/Wayland/Win32/Android) | — | **Not maintainer-led** — a solid, tested PR is welcome ([CONTRIBUTING](../CONTRIBUTING.md)) |
 
 SDL3 is a pinned `build.zig.zon` dependency on [`castholm/SDL`](https://github.com/castholm/SDL), **not** a vendored submodule.
 
@@ -48,7 +48,7 @@ The four rules that keep a future backend swap cheap (SDL3 → a native backend,
 
 - **macOS backend** — deferred; a clean PR is welcome.
 - **Multi-window** — single primary window for v1.0; multi-window deferred.
-- **Pure-Zig native backend** — not maintainer-led; the `backend/native/` slot is retained as build-time scaffolding, and a solid tested PR is welcome ([CONTRIBUTING](../.github/CONTRIBUTING.md)).
+- **Pure-Zig native backend** — not maintainer-led; the `backend/native/` slot is retained as build-time scaffolding, and a solid tested PR is welcome ([CONTRIBUTING](../CONTRIBUTING.md)).
 
 ## See also
 

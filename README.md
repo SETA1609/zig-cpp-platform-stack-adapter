@@ -24,8 +24,8 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 - [`docs/validation-apps.md`](docs/validation-apps.md) — standalone test apps + completion checklist
 - [`docs/dependencies.md`](docs/dependencies.md) — consumed libraries + Zig/C/C++ language split
 - [`docs/cheat_sheet.md`](docs/cheat_sheet.md) — Zig/C/C++ cross-language field guide
-- [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) — how to contribute (OpenGL + native-backend PRs welcome)
-- [`.github/SECURITY.md`](.github/SECURITY.md) — security policy
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute (OpenGL + native-backend PRs welcome)
+- [`SECURITY.md`](SECURITY.md) — security policy
 
 ## What it is
 
@@ -86,7 +86,7 @@ while (!window.shouldClose()) {
 | Backend | Status |
 | --- | --- |
 | **SDL3** (zlib) — via [`castholm/SDL`](https://github.com/castholm/SDL), pinned in `build.zig.zon` | active, default |
-| Pure-Zig native (X11/Wayland/Win32/Android) | **not maintainer-led** — a solid, tested PR is welcome; the `backend/native/` slot exists for it. See [CONTRIBUTING](.github/CONTRIBUTING.md). |
+| Pure-Zig native (X11/Wayland/Win32/Android) | **not maintainer-led** — a solid, tested PR is welcome; the `backend/native/` slot exists for it. See [CONTRIBUTING](CONTRIBUTING.md). |
 
 ## Design rules (what keeps a backend swap cheap)
 
