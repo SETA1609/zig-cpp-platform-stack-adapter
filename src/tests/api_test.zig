@@ -1,27 +1,15 @@
-//! Unit tests for the `platform` public API.
+//! **Contract / data tests** for the `platform` public API — the pure-data
+//! surface only: enum numeric values, struct defaults, and type layout. They
+//! need no backend, so they **run and must stay green today**; `zig build test`
+//! gates merges to `main` on them.
 //!
-//! Two tiers:
-//!  * **Data / contract tests** run today against the pure-data surface (enum
-//!    numeric values, struct defaults, type layout) — they must stay green.
-//!  * **Behavioral tests** assert how the real backend must behave. They are
-//!    written against the live API (so they stay type-checked and in sync) but
-//!    **skipped** until the SDL3 backend lands — flip `impl_ready` to `true`
-//!    (or remove a test's guard as its feature ships) to run them.
-//!
-//! `zig build test` builds and runs this; CI gates merges to `main` on it.
+//! Behavioral red→green tests (init / window / events / input / time / …) live
+//! in the ordered per-function suite under `src/tests/tdd/`, run on the separate
+//! `zig build test-tdd` step, and are skipped until implemented — see
+//! `CONTRIBUTING.md`.
 
 const std = @import("std");
 const platform = @import("platform");
-
-/// Set to `true` once the SDL3 backend implements the surface (or flip per
-/// feature by removing the guard from individual tests). Kept as a container
-/// `var` so the guarded assertions stay type-checked rather than being
-/// comptime-eliminated.
-var impl_ready: bool = false;
-
-fn skipUntilImplemented() error{SkipZigTest}!void {
-    if (!impl_ready) return error.SkipZigTest;
-}
 
 // =============================================================================
 // Data / contract tests — active now
@@ -111,66 +99,4 @@ test "every public declaration type-checks (incl. unreferenced stubs)" {
     std.testing.refAllDecls(platform);
     std.testing.refAllDecls(platform.Window);
     std.testing.refAllDecls(platform.GlContext);
-}
-
-// =============================================================================
-// Behavioral tests — skipped until the SDL3 backend is implemented
-// =============================================================================
-
-test "lifecycle: init then deinit" {
-    try skipUntilImplemented();
-    try platform.init(.{});
-    defer platform.deinit();
-}
-
-test "window: create headless, not closing, then destroy" {
-    try skipUntilImplemented();
-    try platform.init(.{});
-    defer platform.deinit();
-
-    const win = try platform.Window.create(.{ .title = "test", .renderer = .none });
-    defer win.destroy();
-    try std.testing.expect(!win.shouldClose());
-    try std.testing.expectEqual(@as(u32, 1280), win.size().w);
-}
-
-test "input: bound action reads as pressed after synthetic injection" {
-    try skipUntilImplemented();
-    try platform.init(.{});
-    defer platform.deinit();
-
-    platform.bindAction(.menu_pause, .{ .key = .escape });
-    platform.injectAction(.menu_pause, true, 1.0);
-    platform.pollAllEvents();
-    try std.testing.expect(platform.actionPressed(.menu_pause));
-}
-
-test "time: perfFreq positive and now() is monotonic" {
-    try skipUntilImplemented();
-    try platform.init(.{});
-    defer platform.deinit();
-
-    try std.testing.expect(platform.perfFreq() > 0);
-    const t0 = platform.now();
-    const t1 = platform.now();
-    try std.testing.expect(t1 >= t0);
-}
-
-test "events: a freshly pumped frame has no pending close" {
-    try skipUntilImplemented();
-    try platform.init(.{});
-    defer platform.deinit();
-
-    const win = try platform.Window.create(.{ .title = "test", .renderer = .none });
-    defer win.destroy();
-    platform.pollAllEvents();
-    const frame = platform.events();
-    try std.testing.expect(!frame.close_requested);
-}
-
-test "vulkan path: required instance extensions are non-empty" {
-    try skipUntilImplemented();
-    try platform.init(.{});
-    defer platform.deinit();
-    try std.testing.expect(platform.requiredVulkanInstanceExtensions().len > 0);
 }
