@@ -8,6 +8,10 @@ const platform = @import("platform");
 const h = @import("harness.zig");
 const gate = h.gate;
 
+/// The action vocabulary is the *consumer's* — the library names none. This
+/// test stands in for a game defining its own enum and passing it to the lib.
+const Action = enum(u16) { move_forward, jump, interact, menu_pause };
+
 const done = .{
     .bindAction = true,
     .unbindAction = true,
@@ -17,14 +21,14 @@ test "bindAction: a key binding is accepted" {
     try gate(done.bindAction);
     try h.startup();
     defer platform.deinit();
-    platform.bindAction(.menu_pause, .{ .key = .escape });
+    platform.bindAction(Action.menu_pause, .{ .key = .escape });
 }
 
 test "bindAction: a mouse-button binding is accepted" {
     try gate(done.bindAction);
     try h.startup();
     defer platform.deinit();
-    platform.bindAction(.interact, .{ .mouse_button = .left });
+    platform.bindAction(Action.interact, .{ .mouse_button = .left });
 }
 
 test "bindAction: a composite any-of binding is accepted" {
@@ -32,29 +36,29 @@ test "bindAction: a composite any-of binding is accepted" {
     try h.startup();
     defer platform.deinit();
     const any_of = [_]platform.ActionBinding{ .{ .key = .w }, .{ .key = .up } };
-    platform.bindAction(.move_forward, .{ .composite = &any_of });
+    platform.bindAction(Action.move_forward, .{ .composite = &any_of });
 }
 
 test "unbindAction: removing a previously-added binding is accepted" {
     try gate(done.bindAction and done.unbindAction);
     try h.startup();
     defer platform.deinit();
-    platform.bindAction(.menu_pause, .{ .key = .escape });
-    platform.unbindAction(.menu_pause, .{ .key = .escape });
+    platform.bindAction(Action.menu_pause, .{ .key = .escape });
+    platform.unbindAction(Action.menu_pause, .{ .key = .escape });
 }
 
 test "unbindAction: removing one of two bindings leaves the call well-formed" {
     try gate(done.bindAction and done.unbindAction);
     try h.startup();
     defer platform.deinit();
-    platform.bindAction(.jump, .{ .key = .space });
-    platform.bindAction(.jump, .{ .key = .enter });
-    platform.unbindAction(.jump, .{ .key = .enter });
+    platform.bindAction(Action.jump, .{ .key = .space });
+    platform.bindAction(Action.jump, .{ .key = .enter });
+    platform.unbindAction(Action.jump, .{ .key = .enter });
 }
 
 test "unbindAction: unbinding a never-bound action is safe" {
     try gate(done.unbindAction);
     try h.startup();
     defer platform.deinit();
-    platform.unbindAction(.interact, .{ .key = .f });
+    platform.unbindAction(Action.interact, .{ .key = .f });
 }

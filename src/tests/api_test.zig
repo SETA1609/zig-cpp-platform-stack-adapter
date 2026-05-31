@@ -36,13 +36,6 @@ test "enum values: GamepadButton + GamepadAxis (match enum-values.md)" {
     try std.testing.expectEqual(@as(u8, 5), @intFromEnum(platform.GamepadAxis.right_trigger));
 }
 
-test "enum values: ActionId + InputContextId built-ins" {
-    try std.testing.expectEqual(@as(u16, 0), @intFromEnum(platform.ActionId.move_forward));
-    try std.testing.expectEqual(@as(u16, 6), @intFromEnum(platform.ActionId.menu_pause));
-    try std.testing.expectEqual(@as(u16, 0), @intFromEnum(platform.InputContextId.gameplay));
-    try std.testing.expectEqual(@as(u16, 4), @intFromEnum(platform.InputContextId.cinematic));
-}
-
 test "enum values: KeyCode anchors (match enum-values.md)" {
     try std.testing.expectEqual(@as(u16, 0), @intFromEnum(platform.KeyCode.unknown));
     try std.testing.expectEqual(@as(u16, 1), @intFromEnum(platform.KeyCode.a));
