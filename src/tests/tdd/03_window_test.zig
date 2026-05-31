@@ -12,12 +12,12 @@ const h = @import("harness.zig");
 const gate = h.gate;
 
 const done = .{
-    .create = false,
-    .destroy = false,
-    .size = false,
-    .shouldClose = false,
-    .scaleFactor = false,
-    .setSize = false,
+    .create = true,
+    .destroy = true,
+    .size = true,
+    .shouldClose = true,
+    .scaleFactor = true,
+    .setSize = true,
 };
 
 test "create: headless window is non-null" {

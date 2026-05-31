@@ -103,19 +103,34 @@ pub fn deinit() void {
 /// `destroy`. The backend handle lives behind the pointer; consumers never
 /// see its layout. All operations are safe only between `init` and `deinit`.
 pub const Window = opaque {
+    /// `*Window` is the opaque public handle for the backend's `WindowState`.
+    fn state(self: *Window) *backend.WindowState {
+        return @ptrCast(@alignCast(self));
+    }
+
     /// Create and show a window per `opts`. The returned pointer is owned by
     /// the caller — release it with `destroy`. Fails if the backend cannot
     /// satisfy the request (e.g. the chosen `renderer` is unavailable).
     pub fn create(opts: WindowOptions) !*Window {
-        _ = opts;
-        @panic("not implemented");
+        const ws = try backend.windowCreate(.{
+            .title = opts.title,
+            .w = opts.size.w,
+            .h = opts.size.h,
+            .x = if (opts.position) |p| p.x else null,
+            .y = if (opts.position) |p| p.y else null,
+            .fullscreen = opts.fullscreen,
+            .resizable = opts.resizable,
+            .borderless = opts.borderless,
+            .vulkan = opts.renderer == .vulkan,
+            .opengl = opts.renderer == .opengl,
+        });
+        return @ptrCast(ws);
     }
 
     /// Destroy the window and free its backend resources. The pointer is
     /// invalid afterwards.
     pub fn destroy(self: *Window) void {
-        _ = self;
-        @panic("not implemented");
+        backend.windowDestroy(self.state());
     }
 
     /// Replace the title-bar text (UTF-8). The string is copied.
@@ -127,9 +142,7 @@ pub const Window = opaque {
 
     /// Request a new client-area size in pixels.
     pub fn setSize(self: *Window, s: Size) void {
-        _ = self;
-        _ = s;
-        @panic("not implemented");
+        backend.windowSetSize(self.state(), s.w, s.h);
     }
 
     /// Request a new window position. Best-effort: ignored where the display
@@ -142,8 +155,7 @@ pub const Window = opaque {
 
     /// Current drawable size in pixels (DPI-scaled).
     pub fn size(self: *Window) Size {
-        _ = self;
-        @panic("not implemented");
+        return backend.windowSize(self.state());
     }
 
     /// Current window position in screen coordinates. Best-effort; may be
@@ -156,16 +168,14 @@ pub const Window = opaque {
     /// DPI scale factor: `1.0` = 100%, `2.0` = a typical HiDPI display.
     /// Multiply logical sizes by this to get pixel sizes.
     pub fn scaleFactor(self: *Window) f32 {
-        _ = self;
-        @panic("not implemented");
+        return backend.windowScaleFactor(self.state());
     }
 
     /// `true` once the window has been asked to close (WM × button, Alt-F4, or
     /// a delivered `.close` event). Drives the main-loop condition; the window
     /// is not actually destroyed until you call `destroy`.
     pub fn shouldClose(self: *Window) bool {
-        _ = self;
-        @panic("not implemented");
+        return backend.windowShouldClose(self.state());
     }
 };
 
@@ -178,7 +188,7 @@ pub const Window = opaque {
 /// and `EventFrame` state. Call this before `nextEvent`, `events`, or any
 /// `action*` query each frame. *(since v0.6.0)*
 pub fn pollAllEvents() void {
-    @panic("not implemented");
+    backend.pollAllEvents();
 }
 
 /// Pop the next event from this frame's queue, or `null` when drained. The
@@ -193,7 +203,7 @@ pub fn pollAllEvents() void {
 /// };
 /// ```
 pub fn nextEvent() ?Event {
-    @panic("not implemented");
+    return backend.nextEvent();
 }
 
 /// The **struct-of-arrays** view of this frame's events — the data-oriented
@@ -211,7 +221,7 @@ pub fn nextEvent() ?Event {
 /// Slices borrow backend storage valid only until the next `pollAllEvents()`.
 /// See `EventFrame`. *(since v0.6.0)*
 pub fn events() EventFrame {
-    @panic("not implemented");
+    return backend.events();
 }
 
 // =============================================================================
