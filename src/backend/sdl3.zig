@@ -6,7 +6,8 @@
 //! `castholm/SDL` artifact that `build.zig` links into the module.
 //!
 //! Implemented incrementally along the ladder in `CONTRIBUTING.md`. Filled so
-//! far: lifecycle (step 1), time (step 2).
+//! far: lifecycle (step 1), time (step 2), window (step 3), events (step 4),
+//! action-mapped input (steps 5 & 7).
 
 const std = @import("std");
 const common = @import("../common.zig");
@@ -41,6 +42,10 @@ pub fn init(video: bool, gamepad: bool, audio: bool) !void {
 
 /// Tear down all SDL subsystems. Pairs with `init`; safe to re-`init` after.
 pub fn deinit() void {
+    // Drop all action bindings / injections / state so a fresh `init` starts clean.
+    binds.clearRetainingCapacity();
+    injects.clearRetainingCapacity();
+    states.clearRetainingCapacity();
     c.SDL_Quit();
 }
 
@@ -181,6 +186,8 @@ pub fn pollAllEvents() void {
 
     var e: c.SDL_Event = undefined;
     while (c.SDL_PollEvent(&e)) translate(&e);
+
+    refreshActions();
 }
 
 pub fn nextEvent() ?common.Event {
@@ -313,5 +320,168 @@ fn keyFromScancode(sc: c.SDL_Scancode) common.KeyCode {
         c.SDL_SCANCODE_UP => .up,
         c.SDL_SCANCODE_DOWN => .down,
         else => .unknown,
+    };
+}
+
+// =============================================================================
+// Action-mapped input  (ladder steps 5 & 7)
+// =============================================================================
+// Bindings map an action to one or more input sources. Each frame, after the
+// event pump, every known action's state is recomputed from *live* input
+// (SDL keyboard/mouse state) or from a sticky `injectAction` override, and the
+// previous frame's pressed-bit is kept for edge queries (just-pressed / -released).
+
+const BindEntry = struct { action: u16, binding: common.ActionBinding };
+const InjectEntry = struct { action: u16, pressed: bool, value: f32 };
+const ActionState = struct { action: u16, pressed: bool = false, prev: bool = false, value: f32 = 0 };
+
+var binds: std.ArrayList(BindEntry) = .empty;
+var injects: std.ArrayList(InjectEntry) = .empty;
+var states: std.ArrayList(ActionState) = .empty;
+
+fn statePtr(action: u16) ?*ActionState {
+    for (states.items) |*s| if (s.action == action) return s;
+    return null;
+}
+
+fn ensureState(action: u16) void {
+    if (statePtr(action) == null)
+        states.append(ally, .{ .action = action }) catch {};
+}
+
+fn injectedFor(action: u16) ?InjectEntry {
+    for (injects.items) |e| if (e.action == action) return e;
+    return null;
+}
+
+pub fn bindAction(action: u16, binding: common.ActionBinding) void {
+    binds.append(ally, .{ .action = action, .binding = binding }) catch {};
+    ensureState(action);
+}
+
+pub fn unbindAction(action: u16, binding: common.ActionBinding) void {
+    for (binds.items, 0..) |e, i| {
+        if (e.action == action and bindingEql(e.binding, binding)) {
+            _ = binds.orderedRemove(i);
+            return;
+        }
+    }
+}
+
+pub fn injectAction(action: u16, pressed: bool, value: f32) void {
+    for (injects.items) |*e| if (e.action == action) {
+        e.pressed = pressed;
+        e.value = value;
+        ensureState(action);
+        return;
+    };
+    injects.append(ally, .{ .action = action, .pressed = pressed, .value = value }) catch {};
+    ensureState(action);
+}
+
+pub fn actionPressed(action: u16) bool {
+    return if (statePtr(action)) |s| s.pressed else false;
+}
+
+pub fn actionJustPressed(action: u16) bool {
+    return if (statePtr(action)) |s| (s.pressed and !s.prev) else false;
+}
+
+pub fn actionJustReleased(action: u16) bool {
+    return if (statePtr(action)) |s| (!s.pressed and s.prev) else false;
+}
+
+pub fn actionValue(action: u16) f32 {
+    return if (statePtr(action)) |s| s.value else 0;
+}
+
+/// Recompute every known action's state for this frame. Called by
+/// `pollAllEvents` after the SDL event pump (so keyboard/mouse state is fresh).
+fn refreshActions() void {
+    for (states.items) |*s| {
+        s.prev = s.pressed;
+        if (injectedFor(s.action)) |inj| {
+            s.pressed = inj.pressed;
+            s.value = inj.value;
+        } else {
+            const held = bindingActive(s.action);
+            s.pressed = held;
+            s.value = if (held) 1.0 else 0.0;
+        }
+    }
+}
+
+fn bindingActive(action: u16) bool {
+    for (binds.items) |e| {
+        if (e.action == action and bindingHeld(e.binding)) return true;
+    }
+    return false;
+}
+
+fn bindingHeld(b: common.ActionBinding) bool {
+    return switch (b) {
+        .key => |k| keyHeld(k),
+        .mouse_button => |m| mouseHeld(m),
+        .composite => |list| blk: {
+            for (list) |sub| if (bindingHeld(sub)) break :blk true;
+            break :blk false;
+        },
+        // Gamepad sources land with the v0.8.0 milestone.
+        .gamepad_button, .gamepad_axis => false,
+    };
+}
+
+fn bindingEql(x: common.ActionBinding, y: common.ActionBinding) bool {
+    if (std.meta.activeTag(x) != std.meta.activeTag(y)) return false;
+    return switch (x) {
+        .key => |k| k == y.key,
+        .mouse_button => |m| m == y.mouse_button,
+        .gamepad_button => |g| g == y.gamepad_button,
+        .gamepad_axis => |ax| ax.axis == y.gamepad_axis.axis,
+        .composite => |list| list.ptr == y.composite.ptr and list.len == y.composite.len,
+    };
+}
+
+fn keyHeld(code: common.KeyCode) bool {
+    const sc = scancodeFromKey(code);
+    if (sc == c.SDL_SCANCODE_UNKNOWN) return false;
+    const kb = c.SDL_GetKeyboardState(null);
+    return kb[sc];
+}
+
+fn mouseHeld(btn: common.MouseButton) bool {
+    const num: u32 = switch (btn) {
+        .left => 1,
+        .middle => 2,
+        .right => 3,
+        .x1 => 4,
+        .x2 => 5,
+    };
+    const mask = c.SDL_GetMouseState(null, null);
+    return (mask & (@as(u32, 1) << @as(u5, @intCast(num - 1)))) != 0;
+}
+
+/// Reverse of `keyFromScancode`: our `KeyCode` → SDL scancode, for querying the
+/// live keyboard state. Letters use the contiguous range; a handful of common
+/// keys are explicit; the rest are `SDL_SCANCODE_UNKNOWN` (never held).
+fn scancodeFromKey(code: common.KeyCode) c_uint {
+    const v: u16 = @intFromEnum(code);
+    const a: u16 = @intFromEnum(common.KeyCode.a);
+    const z: u16 = @intFromEnum(common.KeyCode.z);
+    if (v >= a and v <= z) {
+        const base: c_uint = @intCast(c.SDL_SCANCODE_A);
+        return base + @as(c_uint, v - a);
+    }
+    return switch (code) {
+        .space => c.SDL_SCANCODE_SPACE,
+        .enter => c.SDL_SCANCODE_RETURN,
+        .tab => c.SDL_SCANCODE_TAB,
+        .backspace => c.SDL_SCANCODE_BACKSPACE,
+        .escape => c.SDL_SCANCODE_ESCAPE,
+        .left => c.SDL_SCANCODE_LEFT,
+        .right => c.SDL_SCANCODE_RIGHT,
+        .up => c.SDL_SCANCODE_UP,
+        .down => c.SDL_SCANCODE_DOWN,
+        else => c.SDL_SCANCODE_UNKNOWN,
     };
 }

@@ -9,8 +9,8 @@ const h = @import("harness.zig");
 const gate = h.gate;
 
 const done = .{
-    .bindAction = false,
-    .unbindAction = false,
+    .bindAction = true,
+    .unbindAction = true,
 };
 
 test "bindAction: a key binding is accepted" {
