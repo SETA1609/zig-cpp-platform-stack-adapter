@@ -234,43 +234,35 @@ pub fn events() EventFrame {
 /// Bind an input source to an action. Multiple bindings on one action are
 /// "any-of". *(since v0.6.0 for keys)*
 pub fn bindAction(action: ActionId, binding: ActionBinding) void {
-    _ = action;
-    _ = binding;
-    @panic("not implemented");
+    backend.bindAction(@intFromEnum(action), binding);
 }
 
 /// Remove a previously-added binding from an action. *(since v0.6.0)*
 pub fn unbindAction(action: ActionId, binding: ActionBinding) void {
-    _ = action;
-    _ = binding;
-    @panic("not implemented");
+    backend.unbindAction(@intFromEnum(action), binding);
 }
 
 /// `true` while any binding for the action is held down this frame. *(since v0.6.0)*
 pub fn actionPressed(action: ActionId) bool {
-    _ = action;
-    @panic("not implemented");
+    return backend.actionPressed(@intFromEnum(action));
 }
 
 /// `true` only on the frame the action transitions released → pressed (edge).
 /// Fires once per press, not on key-repeat. *(since v0.6.0)*
 pub fn actionJustPressed(action: ActionId) bool {
-    _ = action;
-    @panic("not implemented");
+    return backend.actionJustPressed(@intFromEnum(action));
 }
 
 /// `true` only on the frame the action transitions pressed → released (edge).
 /// *(since v0.6.0)*
 pub fn actionJustReleased(action: ActionId) bool {
-    _ = action;
-    @panic("not implemented");
+    return backend.actionJustReleased(@intFromEnum(action));
 }
 
 /// The action's analog value this frame with axis modifiers applied
 /// (`[0,1]` for digital/triggers, `[-1,1]` for sticks). *(since v0.7.0)*
 pub fn actionValue(action: ActionId) f32 {
-    _ = action;
-    @panic("not implemented");
+    return backend.actionValue(@intFromEnum(action));
 }
 
 // -- Stackable input contexts  (since v0.7.0) --------------------------------
@@ -307,10 +299,7 @@ pub fn isContextActive(ctx: InputContextId) bool {
 /// Inject a synthetic action through the **same** downstream path as real
 /// input — for scripted sequences, replays, and tests. *(since v0.7.0)*
 pub fn injectAction(action: ActionId, pressed: bool, value: f32) void {
-    _ = action;
-    _ = pressed;
-    _ = value;
-    @panic("not implemented");
+    backend.injectAction(@intFromEnum(action), pressed, value);
 }
 
 // =============================================================================

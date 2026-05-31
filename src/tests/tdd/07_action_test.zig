@@ -12,11 +12,11 @@ const h = @import("harness.zig");
 const gate = h.gate;
 
 const done = .{
-    .injectAction = false,
-    .actionPressed = false,
-    .actionJustPressed = false,
-    .actionJustReleased = false,
-    .actionValue = false,
+    .injectAction = true,
+    .actionPressed = true,
+    .actionJustPressed = true,
+    .actionJustReleased = true,
+    .actionValue = true,
 };
 
 test "actionPressed: true after a pressed injection" {
