@@ -8,10 +8,10 @@ const h = @import("harness.zig");
 const gate = h.gate;
 
 const done = .{
-    .now = false,
-    .perfFreq = false,
-    .perfCounter = false,
-    .sleep = false,
+    .now = true,
+    .perfFreq = true,
+    .perfCounter = true,
+    .sleep = true,
 };
 
 test "now: is monotonic non-decreasing" {
