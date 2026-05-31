@@ -310,24 +310,23 @@ pub fn injectAction(action: ActionId, pressed: bool, value: f32) void {
 /// Monotonic time in **nanoseconds** since an arbitrary epoch. Use deltas for
 /// frame timing; the absolute value is not wall-clock. *(since v0.6.0)*
 pub fn now() u64 {
-    @panic("not implemented");
+    return backend.now();
 }
 
 /// Ticks per second of the high-resolution performance counter. *(since v0.6.0)*
 pub fn perfFreq() u64 {
-    @panic("not implemented");
+    return backend.perfFreq();
 }
 
 /// Raw high-resolution performance counter value (divide deltas by
 /// `perfFreq()` for seconds). *(since v0.6.0)*
 pub fn perfCounter() u64 {
-    @panic("not implemented");
+    return backend.perfCounter();
 }
 
 /// Block the calling thread for at least `ns` nanoseconds. *(since v0.6.0)*
 pub fn sleep(ns: u64) void {
-    _ = ns;
-    @panic("not implemented");
+    backend.sleep(ns);
 }
 
 // =============================================================================

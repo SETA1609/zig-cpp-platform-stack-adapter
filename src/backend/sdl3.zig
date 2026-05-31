@@ -6,7 +6,7 @@
 //! `castholm/SDL` artifact that `build.zig` links into the module.
 //!
 //! Implemented incrementally along the ladder in `CONTRIBUTING.md`. Filled so
-//! far: lifecycle (step 1).
+//! far: lifecycle (step 1), time (step 2).
 
 const std = @import("std");
 
@@ -32,4 +32,28 @@ pub fn init(video: bool, gamepad: bool, audio: bool) !void {
 /// Tear down all SDL subsystems. Pairs with `init`; safe to re-`init` after.
 pub fn deinit() void {
     c.SDL_Quit();
+}
+
+// =============================================================================
+// Time  (ladder step 2)
+// =============================================================================
+
+/// Monotonic nanoseconds since SDL init.
+pub fn now() u64 {
+    return c.SDL_GetTicksNS();
+}
+
+/// Ticks per second of the high-resolution performance counter.
+pub fn perfFreq() u64 {
+    return c.SDL_GetPerformanceFrequency();
+}
+
+/// Raw high-resolution performance counter value.
+pub fn perfCounter() u64 {
+    return c.SDL_GetPerformanceCounter();
+}
+
+/// Block the calling thread for at least `ns` nanoseconds.
+pub fn sleep(ns: u64) void {
+    c.SDL_DelayNS(ns);
 }
