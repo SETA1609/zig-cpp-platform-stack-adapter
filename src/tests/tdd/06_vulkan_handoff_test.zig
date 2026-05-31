@@ -11,8 +11,8 @@ const h = @import("harness.zig");
 const gate = h.gate;
 
 const done = .{
-    .requiredVulkanInstanceExtensions = false,
-    .nativeHandles = false,
+    .requiredVulkanInstanceExtensions = true,
+    .nativeHandles = true,
 };
 
 test "requiredVulkanInstanceExtensions: returns a non-empty list" {

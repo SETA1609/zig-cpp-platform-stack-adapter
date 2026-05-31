@@ -381,39 +381,39 @@ pub fn openWithSystemDefault(path: []const u8) !void {
 
 /// X11 display + window XID, or `null` if not running under X11.
 pub fn getX11Handle(window: *Window) ?struct { display: *anyopaque, window: u64 } {
-    _ = window;
-    @panic("not implemented");
+    const h = backend.windowX11Handle(window.state()) orelse return null;
+    return .{ .display = h.display, .window = h.window };
 }
 
 /// Wayland display + surface pointers, or `null` if not running under Wayland.
 pub fn getWaylandHandle(window: *Window) ?struct { display: *anyopaque, surface: *anyopaque } {
-    _ = window;
-    @panic("not implemented");
+    const h = backend.windowWaylandHandle(window.state()) orelse return null;
+    return .{ .display = h.display, .surface = h.surface };
 }
 
 /// Win32 HINSTANCE + HWND, or `null` if not on Windows.
 pub fn getWin32Handle(window: *Window) ?struct { hinstance: *anyopaque, hwnd: *anyopaque } {
-    _ = window;
-    @panic("not implemented");
+    const h = backend.windowWin32Handle(window.state()) orelse return null;
+    return .{ .hinstance = h.hinstance, .hwnd = h.hwnd };
 }
 
 /// Android `ANativeWindow*`, or `null` if not on Android.
 pub fn getAndroidHandle(window: *Window) ?struct { window: *anyopaque } {
-    _ = window;
-    @panic("not implemented");
+    const h = backend.windowAndroidHandle(window.state()) orelse return null;
+    return .{ .window = h.window };
 }
 
 /// macOS `CAMetalLayer*`, or `null` if not on macOS. *(deferred — see ROADMAP)*
 pub fn getCocoaHandle(window: *Window) ?struct { layer: *anyopaque } {
     _ = window;
-    @panic("not implemented");
+    return null; // macOS / Metal layer is deferred — always null for now.
 }
 
 /// The Vulkan instance extensions required to present to this window — as
 /// NUL-terminated C strings, **no Vulkan types**. Pass straight to
 /// `VkInstanceCreateInfo.ppEnabledExtensionNames`. *(since v0.6.0)*
 pub fn requiredVulkanInstanceExtensions() []const [*:0]const u8 {
-    @panic("not implemented");
+    return backend.vulkanInstanceExtensions();
 }
 
 // =============================================================================

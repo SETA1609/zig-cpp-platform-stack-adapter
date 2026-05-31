@@ -7,7 +7,7 @@
 //!
 //! Implemented incrementally along the ladder in `CONTRIBUTING.md`. Filled so
 //! far: lifecycle (step 1), time (step 2), window (step 3), events (step 4),
-//! action-mapped input (steps 5 & 7).
+//! action-mapped input (steps 5 & 7), Vulkan hand-off (step 6).
 
 const std = @import("std");
 const common = @import("../common.zig");
@@ -15,6 +15,7 @@ const common = @import("../common.zig");
 /// SDL3's C API. Behind this boundary only — never re-exported.
 pub const c = @cImport({
     @cInclude("SDL3/SDL.h");
+    @cInclude("SDL3/SDL_vulkan.h");
 });
 
 /// libc allocator for backend-owned state (window handles, per-frame event
@@ -153,6 +154,58 @@ pub fn windowShouldClose(ws: *WindowState) bool {
 pub fn windowScaleFactor(ws: *WindowState) f32 {
     const s = c.SDL_GetWindowDisplayScale(ws.sdl);
     return if (s > 0) s else 1.0;
+}
+
+// =============================================================================
+// Vulkan hand-off  (ladder step 6)
+// =============================================================================
+// Raw OS primitives read from SDL's window properties — no Vulkan type crosses
+// out. Each getter returns `null` when the window isn't on that display server,
+// which is how the foreign-OS getters resolve to null on any given platform.
+
+pub const X11Handle = struct { display: *anyopaque, window: u64 };
+pub const WaylandHandle = struct { display: *anyopaque, surface: *anyopaque };
+pub const Win32Handle = struct { hinstance: *anyopaque, hwnd: *anyopaque };
+pub const AndroidHandle = struct { window: *anyopaque };
+
+pub fn windowX11Handle(ws: *WindowState) ?X11Handle {
+    const props = c.SDL_GetWindowProperties(ws.sdl);
+    const display = c.SDL_GetPointerProperty(props, c.SDL_PROP_WINDOW_X11_DISPLAY_POINTER, null) orelse return null;
+    const xid = c.SDL_GetNumberProperty(props, c.SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+    if (xid == 0) return null;
+    return .{ .display = display, .window = @intCast(xid) };
+}
+
+pub fn windowWaylandHandle(ws: *WindowState) ?WaylandHandle {
+    const props = c.SDL_GetWindowProperties(ws.sdl);
+    const display = c.SDL_GetPointerProperty(props, c.SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, null) orelse return null;
+    const surface = c.SDL_GetPointerProperty(props, c.SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, null) orelse return null;
+    return .{ .display = display, .surface = surface };
+}
+
+pub fn windowWin32Handle(ws: *WindowState) ?Win32Handle {
+    const props = c.SDL_GetWindowProperties(ws.sdl);
+    const hwnd = c.SDL_GetPointerProperty(props, c.SDL_PROP_WINDOW_WIN32_HWND_POINTER, null) orelse return null;
+    const hinstance = c.SDL_GetPointerProperty(props, c.SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, null) orelse return null;
+    return .{ .hinstance = hinstance, .hwnd = hwnd };
+}
+
+pub fn windowAndroidHandle(ws: *WindowState) ?AndroidHandle {
+    const props = c.SDL_GetWindowProperties(ws.sdl);
+    const w = c.SDL_GetPointerProperty(props, c.SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER, null) orelse return null;
+    return .{ .window = w };
+}
+
+/// The Vulkan instance extensions SDL needs to present to its windows. Ensures
+/// the Vulkan loader is available first (idempotent; a `.vulkan` window already
+/// loaded it). The returned slice is owned by SDL — do not free.
+pub fn vulkanInstanceExtensions() []const [*:0]const u8 {
+    _ = c.SDL_Vulkan_LoadLibrary(null);
+    var count: u32 = 0;
+    const arr = c.SDL_Vulkan_GetInstanceExtensions(&count);
+    if (arr == null or count == 0) return &.{};
+    const many: [*]const [*:0]const u8 = @ptrCast(arr);
+    return many[0..count];
 }
 
 // =============================================================================
