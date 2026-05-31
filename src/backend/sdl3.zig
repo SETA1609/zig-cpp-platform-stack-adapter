@@ -9,11 +9,21 @@
 //! far: lifecycle (step 1), time (step 2).
 
 const std = @import("std");
+const common = @import("../common.zig");
 
 /// SDL3's C API. Behind this boundary only — never re-exported.
 pub const c = @cImport({
     @cInclude("SDL3/SDL.h");
 });
+
+/// libc allocator for backend-owned state (window handles, per-frame event
+/// buffers). Distinct from any caller-supplied allocator, and untracked by the
+/// test allocator, so it never trips leak detection in the unit tests.
+const ally = std.heap.c_allocator;
+
+/// SDL window property under which each window stashes its `*WindowState`, so
+/// the event pump can resolve an SDL window id back to our state.
+const prop_key = "platform.window_state";
 
 // =============================================================================
 // Lifecycle  (ladder step 1)
@@ -56,4 +66,252 @@ pub fn perfCounter() u64 {
 /// Block the calling thread for at least `ns` nanoseconds.
 pub fn sleep(ns: u64) void {
     c.SDL_DelayNS(ns);
+}
+
+// =============================================================================
+// Window  (ladder step 3)
+// =============================================================================
+
+/// Backend-side window state. `root.Window` is the opaque public handle; it is
+/// just a pointer to one of these (cast back and forth in root.zig).
+pub const WindowState = struct {
+    sdl: *c.SDL_Window,
+    should_close: bool,
+};
+
+/// Plain creation inputs mapped from the public `WindowOptions` by root.zig —
+/// no public type crosses in, no SDL type crosses out.
+pub const WindowCfg = struct {
+    title: []const u8,
+    w: u32,
+    h: u32,
+    x: ?i32,
+    y: ?i32,
+    fullscreen: bool,
+    resizable: bool,
+    borderless: bool,
+    vulkan: bool,
+    opengl: bool,
+};
+
+pub fn windowCreate(cfg: WindowCfg) !*WindowState {
+    var flags: c.SDL_WindowFlags = c.SDL_WINDOW_HIGH_PIXEL_DENSITY;
+    if (cfg.vulkan) flags |= c.SDL_WINDOW_VULKAN;
+    if (cfg.opengl) flags |= c.SDL_WINDOW_OPENGL;
+    if (cfg.resizable) flags |= c.SDL_WINDOW_RESIZABLE;
+    if (cfg.borderless) flags |= c.SDL_WINDOW_BORDERLESS;
+    if (cfg.fullscreen) flags |= c.SDL_WINDOW_FULLSCREEN;
+
+    const title_z = try ally.dupeZ(u8, cfg.title);
+    defer ally.free(title_z);
+
+    const sdl = c.SDL_CreateWindow(title_z.ptr, @intCast(cfg.w), @intCast(cfg.h), flags) orelse
+        return error.WindowCreationFailed;
+
+    if (cfg.x) |x| if (cfg.y) |y| {
+        _ = c.SDL_SetWindowPosition(sdl, x, y);
+    };
+
+    const ws = ally.create(WindowState) catch {
+        c.SDL_DestroyWindow(sdl);
+        return error.OutOfMemory;
+    };
+    ws.* = .{ .sdl = sdl, .should_close = false };
+    _ = c.SDL_SetPointerProperty(c.SDL_GetWindowProperties(sdl), prop_key, ws);
+    return ws;
+}
+
+pub fn windowDestroy(ws: *WindowState) void {
+    c.SDL_DestroyWindow(ws.sdl);
+    ally.destroy(ws);
+}
+
+pub fn windowSize(ws: *WindowState) common.Size {
+    var w: c_int = 0;
+    var h: c_int = 0;
+    _ = c.SDL_GetWindowSizeInPixels(ws.sdl, &w, &h);
+    return .{ .w = @intCast(w), .h = @intCast(h) };
+}
+
+pub fn windowSetSize(ws: *WindowState, w: u32, h: u32) void {
+    _ = c.SDL_SetWindowSize(ws.sdl, @intCast(w), @intCast(h));
+    // Window resize is async/WM-mediated; block until it's applied so a
+    // subsequent `size()` reflects it (best-effort — times out if the WM
+    // never honors the request, e.g. a tiling WM).
+    _ = c.SDL_SyncWindow(ws.sdl);
+}
+
+pub fn windowShouldClose(ws: *WindowState) bool {
+    return ws.should_close;
+}
+
+pub fn windowScaleFactor(ws: *WindowState) f32 {
+    const s = c.SDL_GetWindowDisplayScale(ws.sdl);
+    return if (s > 0) s else 1.0;
+}
+
+// =============================================================================
+// Events  (ladder step 4)
+// =============================================================================
+// One `pollAllEvents` pumps SDL once, resetting then refilling both views of
+// the frame: the struct-of-arrays `EventFrame` (read by `events`) and a flat
+// queue (drained by `nextEvent`). Per-frame buffers are retained across frames
+// (cleared, not freed) so the SoA slices stay valid until the next pump.
+
+var ev_keys: std.ArrayList(common.KeyEvent) = .empty;
+var ev_mouse_buttons: std.ArrayList(common.MouseButtonEvent) = .empty;
+var ev_mouse_motions: std.ArrayList(common.MouseMotionEvent) = .empty;
+var ev_mouse_scrolls: std.ArrayList(common.MouseScrollEvent) = .empty;
+var ev_resizes: std.ArrayList(common.ResizeEvent) = .empty;
+var ev_focuses: std.ArrayList(common.FocusEvent) = .empty;
+var ev_queue: std.ArrayList(common.Event) = .empty;
+var ev_cursor: usize = 0;
+var ev_close_requested: bool = false;
+
+pub fn pollAllEvents() void {
+    ev_keys.clearRetainingCapacity();
+    ev_mouse_buttons.clearRetainingCapacity();
+    ev_mouse_motions.clearRetainingCapacity();
+    ev_mouse_scrolls.clearRetainingCapacity();
+    ev_resizes.clearRetainingCapacity();
+    ev_focuses.clearRetainingCapacity();
+    ev_queue.clearRetainingCapacity();
+    ev_cursor = 0;
+    ev_close_requested = false;
+
+    var e: c.SDL_Event = undefined;
+    while (c.SDL_PollEvent(&e)) translate(&e);
+}
+
+pub fn nextEvent() ?common.Event {
+    if (ev_cursor >= ev_queue.items.len) return null;
+    defer ev_cursor += 1;
+    return ev_queue.items[ev_cursor];
+}
+
+pub fn events() common.EventFrame {
+    return .{
+        .keys = ev_keys.items,
+        .mouse_buttons = ev_mouse_buttons.items,
+        .mouse_motions = ev_mouse_motions.items,
+        .mouse_scrolls = ev_mouse_scrolls.items,
+        .resizes = ev_resizes.items,
+        .focuses = ev_focuses.items,
+        .close_requested = ev_close_requested,
+    };
+}
+
+/// Push to both the SoA list (caller does that) and the flat queue. Drops on
+/// OOM — losing an event is preferable to crashing the frame loop.
+fn enqueue(ev: common.Event) void {
+    ev_queue.append(ally, ev) catch {};
+}
+
+fn translate(e: *const c.SDL_Event) void {
+    switch (e.type) {
+        c.SDL_EVENT_QUIT => {
+            ev_close_requested = true;
+            enqueue(.close);
+        },
+        c.SDL_EVENT_WINDOW_CLOSE_REQUESTED => {
+            if (c.SDL_GetWindowFromID(e.window.windowID)) |w| {
+                const p = c.SDL_GetPointerProperty(c.SDL_GetWindowProperties(w), prop_key, null);
+                if (p) |ptr| {
+                    const ws: *WindowState = @ptrCast(@alignCast(ptr));
+                    ws.should_close = true;
+                }
+            }
+            ev_close_requested = true;
+            enqueue(.close);
+        },
+        c.SDL_EVENT_KEY_DOWN, c.SDL_EVENT_KEY_UP => {
+            const ke: common.KeyEvent = .{
+                .code = keyFromScancode(e.key.scancode),
+                .pressed = e.type == c.SDL_EVENT_KEY_DOWN,
+                .repeat = e.key.repeat,
+                .mods = modsFrom(e.key.mod),
+            };
+            ev_keys.append(ally, ke) catch return;
+            enqueue(.{ .key = ke });
+        },
+        c.SDL_EVENT_MOUSE_MOTION => {
+            const m: common.MouseMotionEvent = .{ .x = e.motion.x, .y = e.motion.y, .dx = e.motion.xrel, .dy = e.motion.yrel };
+            ev_mouse_motions.append(ally, m) catch return;
+            enqueue(.{ .mouse_motion = m });
+        },
+        c.SDL_EVENT_MOUSE_BUTTON_DOWN, c.SDL_EVENT_MOUSE_BUTTON_UP => {
+            const b: common.MouseButtonEvent = .{
+                .button = mouseButtonFrom(e.button.button),
+                .pressed = e.type == c.SDL_EVENT_MOUSE_BUTTON_DOWN,
+                .clicks = e.button.clicks,
+                .x = e.button.x,
+                .y = e.button.y,
+            };
+            ev_mouse_buttons.append(ally, b) catch return;
+            enqueue(.{ .mouse_button = b });
+        },
+        c.SDL_EVENT_MOUSE_WHEEL => {
+            const s: common.MouseScrollEvent = .{ .x = e.wheel.x, .y = e.wheel.y };
+            ev_mouse_scrolls.append(ally, s) catch return;
+            enqueue(.{ .mouse_scroll = s });
+        },
+        c.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED => {
+            const r: common.ResizeEvent = .{ .w = @intCast(e.window.data1), .h = @intCast(e.window.data2) };
+            ev_resizes.append(ally, r) catch return;
+            enqueue(.{ .resize = r });
+        },
+        c.SDL_EVENT_WINDOW_FOCUS_GAINED, c.SDL_EVENT_WINDOW_FOCUS_LOST => {
+            const f: common.FocusEvent = .{ .focused = e.type == c.SDL_EVENT_WINDOW_FOCUS_GAINED };
+            ev_focuses.append(ally, f) catch return;
+            enqueue(.{ .focus = f });
+        },
+        else => {},
+    }
+}
+
+fn modsFrom(mod: c.SDL_Keymod) common.KeyMods {
+    const m: c_int = mod;
+    return .{
+        .shift = (m & c.SDL_KMOD_SHIFT) != 0,
+        .control = (m & c.SDL_KMOD_CTRL) != 0,
+        .alt = (m & c.SDL_KMOD_ALT) != 0,
+        .gui = (m & c.SDL_KMOD_GUI) != 0,
+        .caps_lock = (m & c.SDL_KMOD_CAPS) != 0,
+        .num_lock = (m & c.SDL_KMOD_NUM) != 0,
+    };
+}
+
+fn mouseButtonFrom(b: u8) common.MouseButton {
+    return switch (b) {
+        c.SDL_BUTTON_LEFT => .left,
+        c.SDL_BUTTON_RIGHT => .right,
+        c.SDL_BUTTON_MIDDLE => .middle,
+        c.SDL_BUTTON_X1 => .x1,
+        c.SDL_BUTTON_X2 => .x2,
+        else => .left,
+    };
+}
+
+/// Best-effort scancode → backend-independent `KeyCode`. Letters use the
+/// contiguous SDL/`KeyCode` ranges; a handful of common keys are mapped
+/// explicitly; everything else is `.unknown`. (Real key delivery is exercised
+/// by the manual e2e doc, not the TDD suite, so this can grow over time.)
+fn keyFromScancode(sc: c.SDL_Scancode) common.KeyCode {
+    const s: c_uint = sc;
+    if (s >= c.SDL_SCANCODE_A and s <= c.SDL_SCANCODE_Z) {
+        const base: u16 = @intFromEnum(common.KeyCode.a);
+        return @enumFromInt(base + @as(u16, @intCast(s - c.SDL_SCANCODE_A)));
+    }
+    return switch (s) {
+        c.SDL_SCANCODE_SPACE => .space,
+        c.SDL_SCANCODE_RETURN => .enter,
+        c.SDL_SCANCODE_TAB => .tab,
+        c.SDL_SCANCODE_BACKSPACE => .backspace,
+        c.SDL_SCANCODE_ESCAPE => .escape,
+        c.SDL_SCANCODE_LEFT => .left,
+        c.SDL_SCANCODE_RIGHT => .right,
+        c.SDL_SCANCODE_UP => .up,
+        c.SDL_SCANCODE_DOWN => .down,
+        else => .unknown,
+    };
 }

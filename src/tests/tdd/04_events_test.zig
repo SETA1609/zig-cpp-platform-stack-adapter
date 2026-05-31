@@ -10,9 +10,9 @@ const h = @import("harness.zig");
 const gate = h.gate;
 
 const done = .{
-    .pollAllEvents = false,
-    .nextEvent = false,
-    .events = false,
+    .pollAllEvents = true,
+    .nextEvent = true,
+    .events = true,
 };
 
 test "pollAllEvents: callable once without input" {
