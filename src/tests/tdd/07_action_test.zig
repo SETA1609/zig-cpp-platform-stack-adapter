@@ -11,6 +11,9 @@ const platform = @import("platform");
 const h = @import("harness.zig");
 const gate = h.gate;
 
+/// Consumer-defined action enum (the library names none).
+const Action = enum(u16) { jump, interact, move_forward };
+
 const done = .{
     .injectAction = true,
     .actionPressed = true,
@@ -23,27 +26,27 @@ test "actionPressed: true after a pressed injection" {
     try gate(done.injectAction and done.actionPressed);
     try h.startup();
     defer platform.deinit();
-    platform.injectAction(.jump, true, 1.0);
+    platform.injectAction(Action.jump, true, 1.0);
     platform.pollAllEvents();
-    try std.testing.expect(platform.actionPressed(.jump));
+    try std.testing.expect(platform.actionPressed(Action.jump));
 }
 
 test "actionPressed: false after a released injection" {
     try gate(done.injectAction and done.actionPressed);
     try h.startup();
     defer platform.deinit();
-    platform.injectAction(.jump, false, 0.0);
+    platform.injectAction(Action.jump, false, 0.0);
     platform.pollAllEvents();
-    try std.testing.expect(!platform.actionPressed(.jump));
+    try std.testing.expect(!platform.actionPressed(Action.jump));
 }
 
 test "actionPressed: injecting one action does not press another" {
     try gate(done.injectAction and done.actionPressed);
     try h.startup();
     defer platform.deinit();
-    platform.injectAction(.jump, true, 1.0);
+    platform.injectAction(Action.jump, true, 1.0);
     platform.pollAllEvents();
-    try std.testing.expect(!platform.actionPressed(.interact));
+    try std.testing.expect(!platform.actionPressed(Action.interact));
 }
 
 test "actionJustPressed: fires on the release→press transition frame" {
@@ -51,9 +54,9 @@ test "actionJustPressed: fires on the release→press transition frame" {
     try h.startup();
     defer platform.deinit();
     platform.pollAllEvents(); // baseline frame: released
-    platform.injectAction(.jump, true, 1.0);
+    platform.injectAction(Action.jump, true, 1.0);
     platform.pollAllEvents();
-    try std.testing.expect(platform.actionJustPressed(.jump));
+    try std.testing.expect(platform.actionJustPressed(Action.jump));
 }
 
 test "actionJustPressed: does not fire on a held frame (no new transition)" {
@@ -61,10 +64,10 @@ test "actionJustPressed: does not fire on a held frame (no new transition)" {
     try h.startup();
     defer platform.deinit();
     platform.pollAllEvents();
-    platform.injectAction(.jump, true, 1.0);
+    platform.injectAction(Action.jump, true, 1.0);
     platform.pollAllEvents(); // press frame
     platform.pollAllEvents(); // held frame — no new edge
-    try std.testing.expect(!platform.actionJustPressed(.jump));
+    try std.testing.expect(!platform.actionJustPressed(Action.jump));
 }
 
 test "actionJustPressed: false for an action never pressed" {
@@ -72,18 +75,18 @@ test "actionJustPressed: false for an action never pressed" {
     try h.startup();
     defer platform.deinit();
     platform.pollAllEvents();
-    try std.testing.expect(!platform.actionJustPressed(.interact));
+    try std.testing.expect(!platform.actionJustPressed(Action.interact));
 }
 
 test "actionJustReleased: fires on the press→release transition frame" {
     try gate(done.injectAction and done.actionJustReleased);
     try h.startup();
     defer platform.deinit();
-    platform.injectAction(.jump, true, 1.0);
+    platform.injectAction(Action.jump, true, 1.0);
     platform.pollAllEvents(); // pressed
-    platform.injectAction(.jump, false, 0.0);
+    platform.injectAction(Action.jump, false, 0.0);
     platform.pollAllEvents(); // released this frame
-    try std.testing.expect(platform.actionJustReleased(.jump));
+    try std.testing.expect(platform.actionJustReleased(Action.jump));
 }
 
 test "actionJustReleased: does not fire while steadily released" {
@@ -92,43 +95,43 @@ test "actionJustReleased: does not fire while steadily released" {
     defer platform.deinit();
     platform.pollAllEvents();
     platform.pollAllEvents();
-    try std.testing.expect(!platform.actionJustReleased(.jump));
+    try std.testing.expect(!platform.actionJustReleased(Action.jump));
 }
 
 test "actionJustReleased: false for an unrelated action" {
     try gate(done.injectAction and done.actionJustReleased);
     try h.startup();
     defer platform.deinit();
-    platform.injectAction(.jump, true, 1.0);
+    platform.injectAction(Action.jump, true, 1.0);
     platform.pollAllEvents();
-    platform.injectAction(.jump, false, 0.0);
+    platform.injectAction(Action.jump, false, 0.0);
     platform.pollAllEvents();
-    try std.testing.expect(!platform.actionJustReleased(.interact));
+    try std.testing.expect(!platform.actionJustReleased(Action.interact));
 }
 
 test "actionValue: reflects an injected analog value of 1.0" {
     try gate(done.injectAction and done.actionValue);
     try h.startup();
     defer platform.deinit();
-    platform.injectAction(.move_forward, true, 1.0);
+    platform.injectAction(Action.move_forward, true, 1.0);
     platform.pollAllEvents();
-    try std.testing.expectApproxEqAbs(@as(f32, 1.0), platform.actionValue(.move_forward), 0.001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), platform.actionValue(Action.move_forward), 0.001);
 }
 
 test "actionValue: reflects a partial injected value of 0.5" {
     try gate(done.injectAction and done.actionValue);
     try h.startup();
     defer platform.deinit();
-    platform.injectAction(.move_forward, true, 0.5);
+    platform.injectAction(Action.move_forward, true, 0.5);
     platform.pollAllEvents();
-    try std.testing.expectApproxEqAbs(@as(f32, 0.5), platform.actionValue(.move_forward), 0.001);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.5), platform.actionValue(Action.move_forward), 0.001);
 }
 
 test "actionValue: is 0.0 for a released action" {
     try gate(done.injectAction and done.actionValue);
     try h.startup();
     defer platform.deinit();
-    platform.injectAction(.move_forward, false, 0.0);
+    platform.injectAction(Action.move_forward, false, 0.0);
     platform.pollAllEvents();
-    try std.testing.expectApproxEqAbs(@as(f32, 0.0), platform.actionValue(.move_forward), 0.001);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), platform.actionValue(Action.move_forward), 0.001);
 }

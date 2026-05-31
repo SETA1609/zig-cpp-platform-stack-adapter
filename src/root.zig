@@ -230,76 +230,92 @@ pub fn events() EventFrame {
 // Prefer actions over raw keys so bindings stay rebindable. v0.6.0 ships key
 // bindings + the press queries; contexts, injection, and axis modifiers land
 // in v0.7.0.
+//
+// `action` / `ctx` parameters are `anytype`: pass values of **your own** enum —
+// the library names no actions or contexts (see `ActionId`). They map to the
+// backend's 16-bit id space via `toId`.
+
+/// Map any enum value to the backend's action/context id. Compile-errors on a
+/// non-enum, so the `anytype` surface still rejects non-enum garbage at the
+/// call site rather than silently.
+inline fn toId(e: anytype) u16 {
+    switch (@typeInfo(@TypeOf(e))) {
+        .@"enum" => return @intCast(@intFromEnum(e)),
+        else => @compileError("expected an enum value (your own action/context enum), got " ++ @typeName(@TypeOf(e))),
+    }
+}
 
 /// Bind an input source to an action. Multiple bindings on one action are
-/// "any-of". *(since v0.6.0 for keys)*
-pub fn bindAction(action: ActionId, binding: ActionBinding) void {
-    backend.bindAction(@intFromEnum(action), binding);
+/// "any-of". `action` is a value of your own enum. *(since v0.6.0 for keys)*
+pub fn bindAction(action: anytype, binding: ActionBinding) void {
+    backend.bindAction(toId(action), binding);
 }
 
 /// Remove a previously-added binding from an action. *(since v0.6.0)*
-pub fn unbindAction(action: ActionId, binding: ActionBinding) void {
-    backend.unbindAction(@intFromEnum(action), binding);
+pub fn unbindAction(action: anytype, binding: ActionBinding) void {
+    backend.unbindAction(toId(action), binding);
 }
 
 /// `true` while any binding for the action is held down this frame. *(since v0.6.0)*
-pub fn actionPressed(action: ActionId) bool {
-    return backend.actionPressed(@intFromEnum(action));
+pub fn actionPressed(action: anytype) bool {
+    return backend.actionPressed(toId(action));
 }
 
 /// `true` only on the frame the action transitions released → pressed (edge).
 /// Fires once per press, not on key-repeat. *(since v0.6.0)*
-pub fn actionJustPressed(action: ActionId) bool {
-    return backend.actionJustPressed(@intFromEnum(action));
+pub fn actionJustPressed(action: anytype) bool {
+    return backend.actionJustPressed(toId(action));
 }
 
 /// `true` only on the frame the action transitions pressed → released (edge).
 /// *(since v0.6.0)*
-pub fn actionJustReleased(action: ActionId) bool {
-    return backend.actionJustReleased(@intFromEnum(action));
+pub fn actionJustReleased(action: anytype) bool {
+    return backend.actionJustReleased(toId(action));
 }
 
 /// The action's analog value this frame with axis modifiers applied
 /// (`[0,1]` for digital/triggers, `[-1,1]` for sticks). *(since v0.7.0)*
-pub fn actionValue(action: ActionId) f32 {
-    return backend.actionValue(@intFromEnum(action));
+pub fn actionValue(action: anytype) f32 {
+    return backend.actionValue(toId(action));
 }
 
 // -- Stackable input contexts  (since v0.7.0) --------------------------------
 
 /// Push a context onto the input stack; it can shadow lower contexts so the
 /// same key means different things in gameplay vs. a menu. *(since v0.7.0)*
-pub fn pushContext(ctx: InputContextId) void {
-    _ = ctx;
+pub fn pushContext(ctx: anytype) void {
+    _ = toId(ctx);
     @panic("not implemented");
 }
 
-/// Pop and return the top context. *(since v0.7.0)*
-pub fn popContext() InputContextId {
+/// Pop and return the top context as a value of **your** context enum `Ctx`,
+/// or `null` if the stack is empty. *(since v0.7.0)*
+pub fn popContext(comptime Ctx: type) ?Ctx {
     @panic("not implemented");
 }
 
 /// Replace the top context in place (push+pop without churn). *(since v0.7.0)*
-pub fn replaceTopContext(ctx: InputContextId) void {
-    _ = ctx;
+pub fn replaceTopContext(ctx: anytype) void {
+    _ = toId(ctx);
     @panic("not implemented");
 }
 
-/// The context currently on top of the stack. *(since v0.7.0)*
-pub fn activeContext() InputContextId {
+/// The context currently on top of the stack as a value of your `Ctx` enum,
+/// or `null` if no context is active. *(since v0.7.0)*
+pub fn activeContext(comptime Ctx: type) ?Ctx {
     @panic("not implemented");
 }
 
 /// Whether a given context is anywhere on the active stack. *(since v0.7.0)*
-pub fn isContextActive(ctx: InputContextId) bool {
-    _ = ctx;
+pub fn isContextActive(ctx: anytype) bool {
+    _ = toId(ctx);
     @panic("not implemented");
 }
 
 /// Inject a synthetic action through the **same** downstream path as real
 /// input — for scripted sequences, replays, and tests. *(since v0.7.0)*
-pub fn injectAction(action: ActionId, pressed: bool, value: f32) void {
-    backend.injectAction(@intFromEnum(action), pressed, value);
+pub fn injectAction(action: anytype, pressed: bool, value: f32) void {
+    backend.injectAction(toId(action), pressed, value);
 }
 
 // =============================================================================

@@ -452,22 +452,24 @@ pub const GamepadAxis = enum {
 // =============================================================================
 
 /// A game-meaningful action that input is mapped *to*, so bindings stay
-/// rebindable and raw key codes never leak into game logic. Query via
-/// `actionPressed`/`actionJustPressed`/`actionValue`.
+/// rebindable and raw key codes never leak into game logic.
 ///
-/// Non-exhaustive (`_`): these are illustrative defaults — extend the set
-/// with your game's own actions without a breaking change.
-pub const ActionId = enum(u16) {
-    move_forward,
-    move_back,
-    move_left,
-    move_right,
-    jump,
-    interact,
-    /// Open the pause menu / escape current context.
-    menu_pause,
-    _,
-};
+/// **The library defines no actions of its own** — the action vocabulary is
+/// your game's policy, not the platform layer's. Define your own enum and pass
+/// its values straight to `bindAction` / `actionPressed` / `injectAction` / …,
+/// which accept *any* enum:
+///
+/// ```zig
+/// const Action = enum(u16) { move_forward, jump, interact, menu_pause };
+/// platform.bindAction(Action.menu_pause, .{ .key = .escape });
+/// if (platform.actionJustPressed(Action.menu_pause)) pause();
+/// ```
+///
+/// This opaque, non-exhaustive type names only the underlying id space (a
+/// 16-bit id); it carries no variants. Contrast `KeyCode` / `GamepadButton`,
+/// which *are* the library's domain — physical inputs are universal, actions
+/// are not.
+pub const ActionId = enum(u16) { _ };
 
 /// One way to trigger an `ActionId`. Bind several to the same action for
 /// "any-of" behaviour (e.g. W *or* up-arrow), or nest them with `.composite`.
@@ -504,15 +506,19 @@ pub const GamepadAxisBinding = struct {
 /// A stackable input context. Pushing a context can shadow lower ones so the
 /// same physical key means different things in gameplay vs. a menu. *(since v0.7.0)*
 ///
-/// Non-exhaustive (`_`): extend with your own contexts.
-pub const InputContextId = enum(u16) {
-    gameplay,
-    ui_menu,
-    dialog,
-    inventory,
-    cinematic,
-    _,
-};
+/// **The library defines no contexts of its own** — like `ActionId`, the
+/// context vocabulary is yours. Define your own enum and pass it to
+/// `pushContext` / `isContextActive` / …; the returning queries
+/// (`popContext` / `activeContext`) take your enum *type* and hand it back:
+///
+/// ```zig
+/// const Context = enum(u16) { gameplay, ui_menu, dialog };
+/// platform.pushContext(Context.ui_menu);
+/// const top = platform.activeContext(Context); // -> Context
+/// ```
+///
+/// Opaque and non-exhaustive; carries no variants.
+pub const InputContextId = enum(u16) { _ };
 
 // =============================================================================
 // Capabilities  (since v0.7.0)
