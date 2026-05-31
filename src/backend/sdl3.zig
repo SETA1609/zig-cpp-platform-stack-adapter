@@ -156,6 +156,27 @@ pub fn windowScaleFactor(ws: *WindowState) f32 {
     return if (s > 0) s else 1.0;
 }
 
+pub fn windowSetTitle(ws: *WindowState, title: []const u8) void {
+    // SDL copies the title, but needs a NUL-terminated C string.
+    const title_z = ally.dupeZ(u8, title) catch return;
+    defer ally.free(title_z);
+    _ = c.SDL_SetWindowTitle(ws.sdl, title_z.ptr);
+}
+
+pub fn windowSetPosition(ws: *WindowState, x: i32, y: i32) void {
+    _ = c.SDL_SetWindowPosition(ws.sdl, x, y);
+    // Best-effort + async/WM-mediated; sync so a following `position()` reflects
+    // it (a no-op where the display server forbids self-positioning, e.g. Wayland).
+    _ = c.SDL_SyncWindow(ws.sdl);
+}
+
+pub fn windowPosition(ws: *WindowState) common.Position {
+    var x: c_int = 0;
+    var y: c_int = 0;
+    _ = c.SDL_GetWindowPosition(ws.sdl, &x, &y);
+    return .{ .x = @intCast(x), .y = @intCast(y) };
+}
+
 // =============================================================================
 // Vulkan hand-off  (ladder step 6)
 // =============================================================================
