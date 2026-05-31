@@ -9,7 +9,7 @@ const platform = @import("platform");
 const gate = @import("harness.zig").gate;
 
 const done = .{
-    .lifecycle = false,
+    .lifecycle = true,
 };
 
 test "init: default options succeed then deinit" {

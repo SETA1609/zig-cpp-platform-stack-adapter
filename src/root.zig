@@ -29,6 +29,10 @@ const std = @import("std");
 /// re-exported below so consumers reach them as `platform.<Type>`.
 const common = @import("common.zig");
 
+/// SDL3 backend — the only module that touches SDL. The public functions below
+/// delegate to it; no `SDL_*` type crosses back out (design Rule 1).
+const backend = @import("backend/sdl3.zig");
+
 // -- Re-exported data types ---------------------------------------------------
 // Window geometry & creation
 pub const Renderer = common.Renderer;
@@ -82,14 +86,13 @@ pub const InitOptions = struct {
 /// Start the backend. Call **once** at startup before any other function.
 /// Pairs with `deinit`. *(since v0.6.0)*
 pub fn init(opts: InitOptions) !void {
-    _ = opts;
-    @panic("not implemented");
+    try backend.init(opts.video, opts.gamepad, opts.audio);
 }
 
 /// Shut the backend down and release all global state. Destroy every `Window`
 /// first. Safe to call once after a successful `init`. *(since v0.6.0)*
 pub fn deinit() void {
-    @panic("not implemented");
+    backend.deinit();
 }
 
 // =============================================================================
