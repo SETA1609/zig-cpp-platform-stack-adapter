@@ -135,9 +135,7 @@ pub const Window = opaque {
 
     /// Replace the title-bar text (UTF-8). The string is copied.
     pub fn setTitle(self: *Window, title: []const u8) void {
-        _ = self;
-        _ = title;
-        @panic("not implemented");
+        backend.windowSetTitle(self.state(), title);
     }
 
     /// Request a new client-area size in pixels.
@@ -148,9 +146,7 @@ pub const Window = opaque {
     /// Request a new window position. Best-effort: ignored where the display
     /// server forbids self-positioning (Wayland — see `capabilities()`).
     pub fn setPosition(self: *Window, p: Position) void {
-        _ = self;
-        _ = p;
-        @panic("not implemented");
+        backend.windowSetPosition(self.state(), p.x, p.y);
     }
 
     /// Current drawable size in pixels (DPI-scaled).
@@ -161,8 +157,7 @@ pub const Window = opaque {
     /// Current window position in screen coordinates. Best-effort; may be
     /// meaningless where `can_query_window_position` is false.
     pub fn position(self: *Window) Position {
-        _ = self;
-        @panic("not implemented");
+        return backend.windowPosition(self.state());
     }
 
     /// DPI scale factor: `1.0` = 100%, `2.0` = a typical HiDPI display.
