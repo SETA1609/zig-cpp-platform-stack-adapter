@@ -21,6 +21,8 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 
 ## Documentation
 
+- [`docs/getting-started.md`](docs/getting-started.md) — **start here**: add the dep, wire the build, a minimal window + input app
+- [`docs/sdl3-cheat-sheet.md`](docs/sdl3-cheat-sheet.md) — what SDL3 is + how it works (the backend), with deep-dive links
 - [`docs/vision.md`](docs/vision.md) — what this library is for; why it's renderer-agnostic
 - [`docs/mission.md`](docs/mission.md) — concrete commitments (Vulkan + OpenGL + headless paths)
 - [`docs/api.md`](docs/api.md) — intended public API surface (signatures + semantics)
