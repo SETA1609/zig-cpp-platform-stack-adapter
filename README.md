@@ -4,12 +4,18 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 
 **License:** [MIT](LICENSE) · **Requires:** Zig 0.16+ · **Status:** pre-1.0, single-maintainer
 
-> **Status detail:** the full public API surface is authored and documented in
-> `src/root.zig` (functions) + `src/common.zig` (types) — every function is a
-> `@panic("not implemented")` stub awaiting the SDL3 backend (milestone
-> v0.6.0, see [`docs/sprint.md`](docs/sprint.md)). Consumers can `@import`,
-> build, and wire against the real signatures today; calling an unimplemented
-> function traps at runtime with a clear message.
+> **Status detail:** the **v0.6.0 core is implemented** on the SDL3 backend —
+> windowing (`Window` create/destroy/size/setSize/scaleFactor/setTitle/
+> setPosition/position/shouldClose), the event pump (`pollAllEvents` /
+> `nextEvent` / `events`), time (`now` / `perfFreq` / `perfCounter` / `sleep`),
+> **action-mapped input** (`bindAction` / `actionPressed` / `actionJustPressed` /
+> `injectAction`, generic over *your own* action enum), and the **Vulkan
+> hand-off** (per-OS native-handle getters + `requiredVulkanInstanceExtensions`).
+> Still `@panic("not implemented")` stubs: the **OpenGL path**
+> (`glCreateContext`/…), **input contexts** (`pushContext`/…),
+> **`capabilities()`**, and **filesystem paths** (`appDataDir`/…) — see
+> [`docs/ROADMAP.md`](docs/ROADMAP.md). Calling a not-yet-implemented function
+> traps at runtime with a clear message.
 
 ---
 
@@ -35,7 +41,7 @@ The public surface (see [`docs/mission.md`](docs/mission.md) for the full list):
 
 - Opaque `Window` + `WindowOptions`
 - A queued `Event` union (`key` / `mouse_*` / `resize` / `focus` / `close` / `gamepad` / `text_input` / `file_drop`)
-- **Action-mapped input** — `bindAction` / `actionPressed` / `actionValue`, stackable input contexts, synthetic injection (raw key codes stay inside the backend)
+- **Action-mapped input** — `bindAction` / `actionPressed` / `actionValue`, stackable input contexts, synthetic injection. The action/context **vocabulary is yours** (pass your own enum); the library names none, and raw key codes stay inside the backend.
 - Time, app data/cache paths, clipboard, IME, gamepad, sensor, haptic, power
 - Per-OS native handle getters + the prerequisites for Vulkan **or** OpenGL surface creation
 
@@ -66,17 +72,29 @@ You are **not** forced onto Vulkan. The OpenGL path is fully supported, and it l
 ```zig
 const platform = @import("platform");
 
+// Your game owns the action vocabulary — the library names no actions.
+// Pass values of your own enum to bindAction / actionPressed / injectAction.
+const Action = enum(u16) { quit, jump };
+
+try platform.init(.{});
+defer platform.deinit();
+
 const window = try platform.Window.create(.{
     .title = "my app",
     .size = .{ .w = 1280, .h = 720 },
     .renderer = .vulkan,   // or .opengl, or .none
 });
-defer platform.Window.destroy(window);
+defer window.destroy();
 
-platform.bindAction(.menu_pause, .{ .key = .escape });
+platform.bindAction(Action.quit, .{ .key = .escape });
 while (!window.shouldClose()) {
     platform.pollAllEvents();
-    if (platform.actionJustPressed(.menu_pause)) break;
+    while (platform.nextEvent()) |ev| switch (ev) {
+        .close => return,
+        .resize => |r| { _ = r; /* recreate swapchain */ },
+        else => {},
+    };
+    if (platform.actionJustPressed(Action.quit)) break;
     // ... render with your GPU API of choice ...
 }
 ```
