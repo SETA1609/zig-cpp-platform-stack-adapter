@@ -14,6 +14,7 @@ const done = .{
     .appCacheDir = false,
 };
 
+// WHEN calling appDataDir for "tdd-app" · GIVEN a started platform · THEN it returns an owned path of non-zero length.
 test "appDataDir: returns a non-empty owned path" {
     try gate(done.appDataDir);
     try h.startup();
@@ -23,6 +24,7 @@ test "appDataDir: returns a non-empty owned path" {
     try std.testing.expect(p.len > 0);
 }
 
+// WHEN calling appDataDir for "tdd-app" · GIVEN a started platform · THEN the returned path contains the app name "tdd-app".
 test "appDataDir: the path includes the app name" {
     try gate(done.appDataDir);
     try h.startup();
@@ -32,6 +34,7 @@ test "appDataDir: the path includes the app name" {
     try std.testing.expect(std.mem.indexOf(u8, p, "tdd-app") != null);
 }
 
+// WHEN calling appDataDir twice for the same "tdd-app" · GIVEN a started platform · THEN both calls return identical paths.
 test "appDataDir: is deterministic for the same app name" {
     try gate(done.appDataDir);
     try h.startup();
@@ -43,6 +46,7 @@ test "appDataDir: is deterministic for the same app name" {
     try std.testing.expectEqualStrings(a, b);
 }
 
+// WHEN calling appCacheDir for "tdd-app" · GIVEN a started platform · THEN it returns an owned path of non-zero length.
 test "appCacheDir: returns a non-empty owned path" {
     try gate(done.appCacheDir);
     try h.startup();
@@ -52,6 +56,7 @@ test "appCacheDir: returns a non-empty owned path" {
     try std.testing.expect(p.len > 0);
 }
 
+// WHEN calling appCacheDir for "tdd-app" · GIVEN a started platform · THEN the returned path contains the app name "tdd-app".
 test "appCacheDir: the path includes the app name" {
     try gate(done.appCacheDir);
     try h.startup();
@@ -61,6 +66,7 @@ test "appCacheDir: the path includes the app name" {
     try std.testing.expect(std.mem.indexOf(u8, p, "tdd-app") != null);
 }
 
+// WHEN comparing appCacheDir and appDataDir for "tdd-app" · GIVEN a started platform · THEN the cache path differs from the persistent data path.
 test "appCacheDir: differs from the persistent data dir" {
     try gate(done.appDataDir and done.appCacheDir);
     try h.startup();

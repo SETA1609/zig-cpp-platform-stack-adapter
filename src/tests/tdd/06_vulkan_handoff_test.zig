@@ -15,6 +15,7 @@ const done = .{
     .nativeHandles = true,
 };
 
+// WHEN calling requiredVulkanInstanceExtensions · GIVEN a started platform · THEN the returned list has length greater than 0.
 test "requiredVulkanInstanceExtensions: returns a non-empty list" {
     try gate(done.requiredVulkanInstanceExtensions);
     try h.startup();
@@ -22,6 +23,7 @@ test "requiredVulkanInstanceExtensions: returns a non-empty list" {
     try std.testing.expect(platform.requiredVulkanInstanceExtensions().len > 0);
 }
 
+// WHEN scanning requiredVulkanInstanceExtensions · GIVEN a started platform · THEN the list contains "VK_KHR_surface".
 test "requiredVulkanInstanceExtensions: includes VK_KHR_surface" {
     try gate(done.requiredVulkanInstanceExtensions);
     try h.startup();
@@ -33,6 +35,7 @@ test "requiredVulkanInstanceExtensions: includes VK_KHR_surface" {
     try std.testing.expect(found);
 }
 
+// WHEN iterating requiredVulkanInstanceExtensions · GIVEN a started platform · THEN every entry is a C string of non-zero length.
 test "requiredVulkanInstanceExtensions: every entry is a non-empty C string" {
     try gate(done.requiredVulkanInstanceExtensions);
     try h.startup();
@@ -46,6 +49,7 @@ test "requiredVulkanInstanceExtensions: every entry is a non-empty C string" {
 // Vulkan surface creator can prove (see manual doc). What IS provable in
 // process: which OS's getter is live.
 
+// WHEN querying the Win32/Android/Cocoa native-handle getters · GIVEN a Vulkan window on Linux · THEN each foreign-OS getter returns null.
 test "native handles: foreign-OS getters are null on Linux" {
     if (builtin.os.tag != .linux) return error.SkipZigTest;
     try gate(done.nativeHandles);
@@ -58,6 +62,7 @@ test "native handles: foreign-OS getters are null on Linux" {
     try std.testing.expect(platform.getCocoaHandle(win) == null);
 }
 
+// WHEN querying the X11 and Wayland native-handle getters · GIVEN a Vulkan window on Linux · THEN at least one of them returns a non-null handle.
 test "native handles: the active Linux display server exposes a handle" {
     if (builtin.os.tag != .linux) return error.SkipZigTest;
     try gate(done.nativeHandles);
@@ -70,6 +75,7 @@ test "native handles: the active Linux display server exposes a handle" {
     try std.testing.expect(has_x11 or has_wl);
 }
 
+// WHEN inspecting the present X11 or Wayland native handle · GIVEN a Vulkan window on Linux · THEN its display pointer is non-null.
 test "native handles: a present handle carries a non-null display pointer" {
     if (builtin.os.tag != .linux) return error.SkipZigTest;
     try gate(done.nativeHandles);
