@@ -119,7 +119,7 @@ pub const KeyEvent = struct {
     /// `true` if this is an auto-repeat while the key is held (OS key-repeat).
     repeat: bool,
     /// Modifier keys held at the time of this event.
-    mods: KeyMods,
+    modifiers: KeyModifiers,
 };
 
 /// Payload for `Event.mouse_button`.
@@ -370,7 +370,7 @@ pub const KeyCode = enum(u16) {
 
 /// Modifier keys held during a `KeyEvent`. A packed bitfield so it copies as
 /// a single byte; default-constructs to "no modifiers".
-pub const KeyMods = packed struct {
+pub const KeyModifiers = packed struct {
     /// Either Shift key is down.
     shift: bool = false,
     /// Either Control key is down.

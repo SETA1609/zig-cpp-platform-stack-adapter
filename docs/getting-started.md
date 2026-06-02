@@ -77,7 +77,7 @@ on Esc or the window's close button.
 
 Implemented (v0.6.0): **window** (create/destroy/size/setSize/scaleFactor/
 setTitle/setPosition/position/shouldClose), **events** (pollAllEvents/nextEvent/
-events), **time** (now/perfFreq/perfCounter/sleep), **action-mapped input**
+events), **time** (now/performanceFrequency/performanceCounter/sleep), **action-mapped input**
 (bindAction/unbindAction/actionPressed/actionJustPressed/actionJustReleased/
 actionValue/injectAction — all over *your* enum), and the **Vulkan hand-off**
 (getX11Handle/getWaylandHandle/getWin32Handle/getAndroidHandle +
@@ -85,7 +85,7 @@ requiredVulkanInstanceExtensions).
 
 Still `@panic("not implemented")` — **don't call these yet**: the OpenGL path
 (`glCreateContext`/…), input **contexts** (`pushContext`/…), `capabilities()`,
-and filesystem **paths** (`appDataDir`/…). See [`ROADMAP.md`](ROADMAP.md).
+and filesystem **paths** (`applicationDataDirectory`/…). See [`ROADMAP.md`](ROADMAP.md).
 
 > Needs a display server (X11/Wayland). For headless CI, run with the SDL dummy
 > driver: `SDL_VIDEODRIVER=dummy`.

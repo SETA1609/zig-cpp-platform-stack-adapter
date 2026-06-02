@@ -31,8 +31,8 @@ hash in this heading when you do.
 - [ ] Action state machine: `injectAction` → `actionPressed` / `actionJustPressed` / `actionJustReleased` / `actionValue`
 - [ ] Action bindings accept every shape: `bindAction` / `unbindAction`
 - [ ] Input contexts: `pushContext` / `popContext` / `replaceTopContext` / `activeContext` / `isContextActive`
-- [ ] Time: `now` / `perfFreq` / `perfCounter` / `sleep`
-- [ ] Filesystem: `appDataDir` / `appCacheDir`
+- [ ] Time: `now` / `performanceFrequency` / `performanceCounter` / `sleep`
+- [ ] Filesystem: `applicationDataDirectory` / `applicationCacheDirectory`
 - [ ] Vulkan hand-off: `requiredVulkanInstanceExtensions`; native-handle presence invariants
 
 **Manual / e2e** (this document; all UNPROVEN now):
@@ -96,7 +96,7 @@ while (platform.nextEvent()) |ev| std.debug.print("{any}\n", .{ev});
 | Event | Action to perform | Pass criterion |
 | --- | --- | --- |
 | `Event.close` | Click the WM **×** button (or Alt-F4). | A `.close` event arrives; `win.shouldClose()` flips to `true`. Window stays alive until `destroy`. |
-| `Event.key` | Press & release several keys, incl. modifiers, and **hold** one. | `.key` events with correct `code` (physical position — WASD is WASD on AZERTY), `pressed`, `repeat` (true only on OS auto-repeat), and `mods`. |
+| `Event.key` | Press & release several keys, incl. modifiers, and **hold** one. | `.key` events with correct `code` (physical position — WASD is WASD on AZERTY), `pressed`, `repeat` (true only on OS auto-repeat), and `modifiers`. |
 | `Event.mouse_button` | Left/right/middle click; double-click; thumb buttons. | `.mouse_button` with right `button`, `pressed`, `clicks` (2 on double), and `x/y` at the cursor. |
 | `Event.mouse_motion` | Move the pointer across the window. | `.mouse_motion` with absolute `x/y` and sensible `dx/dy` deltas. |
 | `Event.mouse_scroll` | Scroll wheel up/down and (if available) horizontal. | `.mouse_scroll`; positive `y` = scroll **up**/away. |
@@ -128,7 +128,7 @@ on screen and frame pacing. Drive it with the **GL clear-color** validation app.
 | API | Procedure | Pass criterion |
 | --- | --- | --- |
 | `glCreateContext` | Create a window with `.renderer = .opengl`, then `glCreateContext(win)`. | Returns a non-null context; no GL error. |
-| `glMakeCurrent` | `glMakeCurrent(win, ctx)`. | Subsequent GL calls succeed on the calling thread. |
+| `glMakeCurrent` | `glMakeCurrent(win, context)`. | Subsequent GL calls succeed on the calling thread. |
 | `glGetProcAddress` | Look up `"glClear"` (valid) and `"glNotAReal_Fn"` (bogus). | Valid name → non-null pointer; bogus name → `null`. |
 | `glSwapWindow` | Each frame: `glClearColor(0,1,0,1); glClear(...); glSwapWindow(win);` | A **solid green** window; no tearing artifacts beyond vsync setting. |
 | `glSetSwapInterval` | Set `1` (vsync) then `0` (off); measure frame time over ~2s. | `1` ≈ caps to refresh rate (e.g. ~16.6 ms @ 60 Hz); `0` runs uncapped (much faster). `-1` adaptive where supported. |
@@ -138,7 +138,7 @@ on screen and frame pacing. Drive it with the **GL clear-color** validation app.
 
 | API | Procedure | Pass criterion |
 | --- | --- | --- |
-| `appDataDir` / `appCacheDir` | (Path shape is asserted in the TDD suite.) Write a file into the returned dir, restart, read it back. | Data dir **persists** across runs; both dirs exist and are writable; they follow OS conventions (`~/.local/share`, `%APPDATA%`, `~/Library/...`). |
+| `applicationDataDirectory` / `applicationCacheDirectory` | (Path shape is asserted in the TDD suite.) Write a file into the returned dir, restart, read it back. | Data dir **persists** across runs; both dirs exist and are writable; they follow OS conventions (`~/.local/share`, `%APPDATA%`, `~/Library/...`). |
 | `openWithSystemDefault` | `openWithSystemDefault("https://example.com")` and a local file path. | The OS default handler **launches** (browser opens the URL; file opens in its app). Side-effecting — no assertion possible. |
 
 ## 6. Native Vulkan handles — *validity* (cross-lib e2e)
