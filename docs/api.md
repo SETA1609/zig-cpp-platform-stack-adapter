@@ -67,6 +67,23 @@ pub const Window = opaque {
     pub fn position(self: *Window) Position;               // best-effort
     pub fn scaleFactor(self: *Window) f32;                 // 1.0 = 100% DPI
     pub fn shouldClose(self: *Window) bool;
+
+    // window state (since v0.7.0) — setters are best-effort/WM-mediated;
+    // the resizable/bordered flags and min/max size are tracked by SDL.
+    pub fn setFullscreen(self: *Window, on: bool) void;
+    pub fn isFullscreen(self: *Window) bool;
+    pub fn setResizable(self: *Window, on: bool) void;
+    pub fn isResizable(self: *Window) bool;
+    pub fn setBordered(self: *Window, on: bool) void;
+    pub fn isBordered(self: *Window) bool;
+    pub fn setMinSize(self: *Window, s: Size) void;        // {0,0} = no constraint
+    pub fn minSize(self: *Window) Size;
+    pub fn setMaxSize(self: *Window, s: Size) void;        // {0,0} = no constraint
+    pub fn maxSize(self: *Window) Size;
+    pub fn minimize(self: *Window) void;
+    pub fn maximize(self: *Window) void;
+    pub fn restore(self: *Window) void;
+    pub fn raise(self: *Window) void;
 };
 ```
 
