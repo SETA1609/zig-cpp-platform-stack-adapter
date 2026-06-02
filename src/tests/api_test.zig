@@ -15,12 +15,14 @@ const platform = @import("platform");
 // Data / contract tests — active now
 // =============================================================================
 
+// WHEN reading Renderer's integer values · GIVEN the enum's wire contract · THEN none=0, vulkan=1, opengl=2.
 test "enum values: Renderer" {
     try std.testing.expectEqual(@as(u8, 0), @intFromEnum(platform.Renderer.none));
     try std.testing.expectEqual(@as(u8, 1), @intFromEnum(platform.Renderer.vulkan));
     try std.testing.expectEqual(@as(u8, 2), @intFromEnum(platform.Renderer.opengl));
 }
 
+// WHEN reading MouseButton's integer values · GIVEN the enum's wire contract · THEN left=0, right=1, middle=2, x1=3, x2=4.
 test "enum values: MouseButton" {
     try std.testing.expectEqual(@as(u8, 0), @intFromEnum(platform.MouseButton.left));
     try std.testing.expectEqual(@as(u8, 1), @intFromEnum(platform.MouseButton.right));
@@ -29,6 +31,7 @@ test "enum values: MouseButton" {
     try std.testing.expectEqual(@as(u8, 4), @intFromEnum(platform.MouseButton.x2));
 }
 
+// WHEN reading GamepadButton/GamepadAxis anchor values · GIVEN the contract in enum-values.md · THEN a=0, dpad_right=14, left_x=0, right_trigger=5.
 test "enum values: GamepadButton + GamepadAxis (match enum-values.md)" {
     try std.testing.expectEqual(@as(u8, 0), @intFromEnum(platform.GamepadButton.a));
     try std.testing.expectEqual(@as(u8, 14), @intFromEnum(platform.GamepadButton.dpad_right));
@@ -36,6 +39,7 @@ test "enum values: GamepadButton + GamepadAxis (match enum-values.md)" {
     try std.testing.expectEqual(@as(u8, 5), @intFromEnum(platform.GamepadAxis.right_trigger));
 }
 
+// WHEN reading KeyCode anchor values · GIVEN the contract in enum-values.md · THEN unknown=0, a=1, w=23, escape=43, f12=83.
 test "enum values: KeyCode anchors (match enum-values.md)" {
     try std.testing.expectEqual(@as(u16, 0), @intFromEnum(platform.KeyCode.unknown));
     try std.testing.expectEqual(@as(u16, 1), @intFromEnum(platform.KeyCode.a));
@@ -44,6 +48,7 @@ test "enum values: KeyCode anchors (match enum-values.md)" {
     try std.testing.expectEqual(@as(u16, 83), @intFromEnum(platform.KeyCode.f12));
 }
 
+// WHEN inspecting the ActionId/InputContextId/KeyCode type info · GIVEN consumer-extensible ids · THEN the id enums are u16-backed and non-exhaustive.
 test "extensible enums are non-exhaustive and u16-backed" {
     try std.testing.expectEqual(u16, @typeInfo(platform.ActionId).@"enum".tag_type);
     try std.testing.expectEqual(u16, @typeInfo(platform.InputContextId).@"enum".tag_type);
@@ -51,6 +56,7 @@ test "extensible enums are non-exhaustive and u16-backed" {
     try std.testing.expectEqual(u16, @typeInfo(platform.KeyCode).@"enum".tag_type);
 }
 
+// WHEN constructing a default KeyMods · GIVEN no fields set · THEN it is one byte and every modifier bit is false.
 test "KeyMods is a single byte and defaults to no modifiers" {
     try std.testing.expectEqual(@as(usize, 1), @sizeOf(platform.KeyMods));
     const m: platform.KeyMods = .{};
@@ -58,6 +64,7 @@ test "KeyMods is a single byte and defaults to no modifiers" {
     try std.testing.expect(!m.caps_lock and !m.num_lock);
 }
 
+// WHEN constructing WindowOptions with only a title · GIVEN the field defaults · THEN size=1280x720, renderer=.vulkan, resizable=true, fullscreen/borderless=false, position=null.
 test "WindowOptions defaults" {
     const o: platform.WindowOptions = .{ .title = "t" };
     try std.testing.expectEqual(@as(u32, 1280), o.size.w);
@@ -68,12 +75,14 @@ test "WindowOptions defaults" {
     try std.testing.expect(o.position == null);
 }
 
+// WHEN constructing a default InitOptions · GIVEN no fields set · THEN video is on and gamepad/audio are off.
 test "InitOptions defaults: video on, rest off" {
     const o: platform.InitOptions = .{};
     try std.testing.expect(o.video);
     try std.testing.expect(!o.gamepad and !o.audio);
 }
 
+// WHEN constructing a default EventFrame · GIVEN no events · THEN all per-type slices are empty and close_requested is false.
 test "EventFrame defaults to an empty frame" {
     const f: platform.EventFrame = .{};
     try std.testing.expectEqual(@as(usize, 0), f.keys.len);
@@ -82,10 +91,12 @@ test "EventFrame defaults to an empty frame" {
     try std.testing.expect(!f.close_requested);
 }
 
+// WHEN reading platform.version · GIVEN the compiled module · THEN it is a non-empty string.
 test "version string is present" {
     try std.testing.expect(platform.version.len > 0);
 }
 
+// WHEN forcing semantic analysis of every public decl · GIVEN refAllDecls over platform, Window, and GlContext · THEN all signatures/bodies type-check (catches drift in untested stubs).
 test "every public declaration type-checks (incl. unreferenced stubs)" {
     // Forces semantic analysis of every decl/body without calling them, so a
     // signature drift in an otherwise-untested stub is still caught.
