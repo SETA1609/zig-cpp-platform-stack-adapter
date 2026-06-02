@@ -24,17 +24,19 @@ backed by SDL3. See [`docs/vision.md`](docs/vision.md) and
 
 ## Test-first development
 
-The public API in `src/root.zig` is a complete set of signatures whose bodies
-are `@panic("not implemented")` stubs. Implementing the library means replacing
-a stub with a real SDL3-backed body and proving it with the test that already
-exists for it.
+The public API in `src/root.zig` is a complete set of signatures. The v0.6.0
+core and the v0.7.0 window-state / mouse-capture / cursor calls have real
+SDL3-backed bodies; the remaining bodies (OpenGL path, input contexts,
+`capabilities()`, filesystem paths) are still `@panic("not implemented")`
+stubs. Implementing the rest of the library means replacing a stub with a real
+SDL3-backed body and proving it with the test that already exists for it.
 
 ### The two test steps
 
 | Step | File(s) | What it is | When it runs |
 | --- | --- | --- | --- |
 | `zig build test` | `src/tests/api_test.zig` | **Contract / data tests** — enum values, struct defaults, type layout. Need no backend. | **Gates CI** — must always be green. |
-| `zig build test-tdd` | `src/tests/tdd/*` | **Ordered red→green suite** — one file per function group, every test calls the real function and asserts its result. Each is **skipped** behind a `done` flag until implemented. | Off CI. Green today (all skipped); turns into real assertions as you flip flags. |
+| `zig build test-tdd` | `src/tests/tdd/*` | **Ordered red→green suite** — one file per function group, every test calls the real function and asserts its result. Each is **skipped** behind a `done` flag until implemented. | Off CI. The implemented groups (lifecycle, time, window, events, binding, action, Vulkan hand-off, window state, mouse — sessions `01`–`07`, `11`, `12`) have their flags flipped on and run real assertions; sessions for not-yet-implemented functions (contexts `08`, capabilities `09`, paths `10`, the GL path, and a handful of window-state sub-flags) stay skipped until their backend lands. |
 
 Functions whose result can't be proven in-process (visual output, real hardware
 input, a live GPU/GL/Vulkan surface) are **not** in the TDD suite — they are e2e

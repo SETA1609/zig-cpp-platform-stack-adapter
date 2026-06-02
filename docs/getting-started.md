@@ -83,6 +83,12 @@ actionValue/injectAction — all over *your* enum), and the **Vulkan hand-off**
 (getX11Handle/getWaylandHandle/getWin32Handle/getAndroidHandle +
 requiredVulkanInstanceExtensions).
 
+Implemented (v0.7.0): **runtime window state** (setFullscreen/setResizable/
+setBordered + the is* getters, setMinSize/setMaxSize + getters, minimize/
+maximize/restore/raise) and **mouse capture & cursor** (setRelativeMouseMode/
+relativeMouseMode, warpMouse, setMouseGrab/mouseGrabbed, global showCursor/
+hideCursor/cursorVisible).
+
 Still `@panic("not implemented")` — **don't call these yet**: the OpenGL path
 (`glCreateContext`/…), input **contexts** (`pushContext`/…), `capabilities()`,
 and filesystem **paths** (`applicationDataDirectory`/…). See [`ROADMAP.md`](ROADMAP.md).
