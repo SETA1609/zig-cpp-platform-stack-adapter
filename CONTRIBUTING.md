@@ -124,7 +124,7 @@ platform-specific shims) — but it must stay **behind the Zig API**:
   leaks out). Add a `noexcept` `extern "C"` bridge and **catch before crossing
   the C ABI**; a C++ exception must never propagate into Zig.
 - **C++ style: Google conventions, max C++23.** Already encoded in
-  [`.clang-format`](.clang-format) (`BasedOnStyle: Google`, `Standard: c++23`).
+  [`.clang-format`](.clang-format) (`BasedOnStyle: Google`, `Standard: Latest`).
   Run `clang-format` on any C/C++ you add; keep `zig fmt --check .` green for the
   Zig side. Do not use language features past C++23.
 - **Smart pointers first, manual pointers later — in separate PRs.** Write the

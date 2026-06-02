@@ -1,17 +1,16 @@
-name: build
+name: CI
 
-# Runs on every push to main and on every PR targeting main. The `Test` step
-# is the merge gate: enable it as a required status check in the repo's branch
-# protection for `main` so a PR cannot merge until it is green.
+# Runs on every push (any branch) and every PR. The `Test (contract)` step is
+# the merge gate: enable it as a required status check in branch protection for
+# `main` so a PR can't merge until it's green on all three OSes.
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
-    branches: [main]
 
 jobs:
   build:
-    name: ${{ matrix.os }}
+    name: build · ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -24,23 +23,26 @@ jobs:
         uses: mlugg/setup-zig@v2
         with:
           version: 0.16.0
+          use-cache: true
 
-      - name: zig version
-        run: zig version
+      - run: zig version
 
-      # Formatting gate (run before build so no generated dirs are scanned).
+      # Format gate — runs on every OS. `.gitattributes` (eol=lf) keeps the
+      # Windows checkout LF so this passes there too. Explicit paths so no
+      # generated dir (.zig-cache) is scanned.
       - name: Format check
-        run: zig fmt --check build.zig build.zig.zon src
+        run: zig fmt --check build.zig build.zig.zon src demo
 
-      # Build the static library (compiles SDL3 once).
+      # Compiles SDL3 once into the static artifact (+ the demo + test exes).
       - name: Build
         run: zig build
 
-      # Smoke demo — builds + runs a consumer of the module (see demo/main.zig).
-      - name: Run
+      # Pure-data smoke demo (no window / no GPU) — runs headless to a clean exit.
+      - name: Run smoke demo
         run: zig build run
 
-      # Unit tests — the merge gate. Data/contract tests run; backend
-      # behavioral tests skip until implemented (see src/tests/api_test.zig).
-      - name: Test
+      # Merge gate: contract / data tests (enum values, struct defaults, type
+      # layout) — need no backend. The behavioral `test-tdd` suite needs a real
+      # display server and is intentionally off-CI (see CONTRIBUTING.md).
+      - name: Test (contract)
         run: zig build test
