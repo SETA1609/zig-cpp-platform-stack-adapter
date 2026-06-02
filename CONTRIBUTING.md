@@ -20,7 +20,7 @@ backed by SDL3. See [`docs/vision.md`](docs/vision.md) and
 - OpenGL-path improvements and fixes.
 - A native backend per above — whole or one-OS-at-a-time.
 - Bug fixes, more validation apps (see [`docs/validation-apps.md`](docs/validation-apps.md)), test coverage, docs / link-rot.
-- macOS support — contributors are free to implement it. The maintainer just won't test it until much later, so a clean, self-tested PR is welcome.
+- macOS support — **in scope, not deferred**, but contributor-led: the maintainer won't build or test it until much later, so a clean, self-tested PR is welcome. The concrete piece is the Cocoa native-handle getter (`getCocoaHandle` → a `CAMetalLayer`), which pairs with the vulkan lib's `createMetalSurface`. See the macOS row in [`docs/completion-plan.md`](docs/completion-plan.md).
 
 ## Test-first development
 
