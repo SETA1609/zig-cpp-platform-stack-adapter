@@ -244,6 +244,41 @@ pub fn windowRaise(ws: *WindowState) void {
     _ = c.SDL_RaiseWindow(ws.sdl);
 }
 
+// -- mouse & cursor (ladder step 12) -----------------------------------------
+
+pub fn windowSetRelativeMouseMode(ws: *WindowState, on: bool) void {
+    _ = c.SDL_SetWindowRelativeMouseMode(ws.sdl, on);
+}
+
+pub fn windowRelativeMouseMode(ws: *WindowState) bool {
+    return c.SDL_GetWindowRelativeMouseMode(ws.sdl);
+}
+
+pub fn windowWarpMouse(ws: *WindowState, x: f32, y: f32) void {
+    c.SDL_WarpMouseInWindow(ws.sdl, x, y);
+}
+
+pub fn windowSetMouseGrab(ws: *WindowState, on: bool) void {
+    _ = c.SDL_SetWindowMouseGrab(ws.sdl, on);
+}
+
+pub fn windowMouseGrabbed(ws: *WindowState) bool {
+    return c.SDL_GetWindowMouseGrab(ws.sdl);
+}
+
+// Global cursor visibility (not per-window in SDL).
+pub fn showCursor() void {
+    _ = c.SDL_ShowCursor();
+}
+
+pub fn hideCursor() void {
+    _ = c.SDL_HideCursor();
+}
+
+pub fn cursorVisible() bool {
+    return c.SDL_CursorVisible();
+}
+
 // =============================================================================
 // Vulkan hand-off  (ladder step 6)
 // =============================================================================
