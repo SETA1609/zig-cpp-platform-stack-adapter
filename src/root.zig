@@ -247,7 +247,58 @@ pub const Window = opaque {
     pub fn raise(self: *Window) void {
         backend.windowRaise(self.state());
     }
+
+    // -- mouse capture  (since v0.7.0) ---------------------------------------
+
+    /// Enter/leave relative mouse mode: the cursor is hidden and locked, and
+    /// motion arrives as deltas (`MouseMotionEvent.dx/.dy`) — the mode for
+    /// FPS-style camera look. Query with `relativeMouseMode`.
+    pub fn setRelativeMouseMode(self: *Window, on: bool) void {
+        backend.windowSetRelativeMouseMode(self.state(), on);
+    }
+
+    /// `true` while the window is in relative mouse mode.
+    pub fn relativeMouseMode(self: *Window) bool {
+        return backend.windowRelativeMouseMode(self.state());
+    }
+
+    /// Warp the pointer to `(x, y)` in the window's coordinates (pixels).
+    pub fn warpMouse(self: *Window, x: f32, y: f32) void {
+        backend.windowWarpMouse(self.state(), x, y);
+    }
+
+    /// Confine the pointer to this window (a soft grab; distinct from relative
+    /// mode). Query with `mouseGrabbed`.
+    pub fn setMouseGrab(self: *Window, on: bool) void {
+        backend.windowSetMouseGrab(self.state(), on);
+    }
+
+    /// `true` while the pointer is grabbed to this window.
+    pub fn mouseGrabbed(self: *Window) bool {
+        return backend.windowMouseGrabbed(self.state());
+    }
 };
+
+// =============================================================================
+// Cursor  (since v0.7.0)
+// =============================================================================
+// Cursor visibility is a global (process-wide) setting in SDL, not per-window —
+// so these are free functions, not `Window` methods.
+
+/// Show the system cursor (the default state).
+pub fn showCursor() void {
+    backend.showCursor();
+}
+
+/// Hide the system cursor. (Relative mouse mode hides it implicitly.)
+pub fn hideCursor() void {
+    backend.hideCursor();
+}
+
+/// `true` while the system cursor is shown.
+pub fn cursorVisible() bool {
+    return backend.cursorVisible();
+}
 
 // =============================================================================
 // Events  (since v0.6.0)

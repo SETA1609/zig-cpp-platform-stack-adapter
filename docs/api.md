@@ -84,7 +84,25 @@ pub const Window = opaque {
     pub fn maximize(self: *Window) void;
     pub fn restore(self: *Window) void;
     pub fn raise(self: *Window) void;
+
+    // mouse capture (since v0.7.0) — relative mode delivers motion as deltas
+    // (MouseMotionEvent.dx/.dy) for FPS-style look.
+    pub fn setRelativeMouseMode(self: *Window, on: bool) void;
+    pub fn relativeMouseMode(self: *Window) bool;
+    pub fn warpMouse(self: *Window, x: f32, y: f32) void;  // window coords (pixels)
+    pub fn setMouseGrab(self: *Window, on: bool) void;     // confine pointer to window
+    pub fn mouseGrabbed(self: *Window) bool;
 };
+```
+
+## Cursor  *(since v0.7.0)*
+
+Global (process-wide) cursor visibility — free functions, not `Window` methods.
+
+```zig
+pub fn showCursor() void;
+pub fn hideCursor() void;        // relative mouse mode hides it implicitly
+pub fn cursorVisible() bool;
 ```
 
 ## Events  *(since v0.6.0)*
