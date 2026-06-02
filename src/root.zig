@@ -53,7 +53,7 @@ pub const TextInputEvent = common.TextInputEvent;
 pub const FileDropEvent = common.FileDropEvent;
 // Input identities
 pub const KeyCode = common.KeyCode;
-pub const KeyMods = common.KeyMods;
+pub const KeyModifiers = common.KeyModifiers;
 pub const MouseButton = common.MouseButton;
 pub const GamepadButton = common.GamepadButton;
 pub const GamepadAxis = common.GamepadAxis;
@@ -139,14 +139,14 @@ pub const Window = opaque {
     }
 
     /// Request a new client-area size in pixels.
-    pub fn setSize(self: *Window, s: Size) void {
-        backend.windowSetSize(self.state(), s.w, s.h);
+    pub fn setSize(self: *Window, new_size: Size) void {
+        backend.windowSetSize(self.state(), new_size.w, new_size.h);
     }
 
     /// Request a new window position. Best-effort: ignored where the display
     /// server forbids self-positioning (Wayland — see `capabilities()`).
-    pub fn setPosition(self: *Window, p: Position) void {
-        backend.windowSetPosition(self.state(), p.x, p.y);
+    pub fn setPosition(self: *Window, new_position: Position) void {
+        backend.windowSetPosition(self.state(), new_position.x, new_position.y);
     }
 
     /// Current drawable size in pixels (DPI-scaled).
@@ -208,8 +208,8 @@ pub const Window = opaque {
 
     /// Clamp the smallest size the user can resize the window to (pixels).
     /// `{0,0}` removes the constraint.
-    pub fn setMinSize(self: *Window, s: Size) void {
-        backend.windowSetMinSize(self.state(), s.w, s.h);
+    pub fn setMinSize(self: *Window, new_size: Size) void {
+        backend.windowSetMinSize(self.state(), new_size.w, new_size.h);
     }
 
     /// The current minimum-size constraint (`{0,0}` = none).
@@ -219,8 +219,8 @@ pub const Window = opaque {
 
     /// Clamp the largest size the user can resize the window to (pixels).
     /// `{0,0}` removes the constraint.
-    pub fn setMaxSize(self: *Window, s: Size) void {
-        backend.windowSetMaxSize(self.state(), s.w, s.h);
+    pub fn setMaxSize(self: *Window, new_size: Size) void {
+        backend.windowSetMaxSize(self.state(), new_size.w, new_size.h);
     }
 
     /// The current maximum-size constraint (`{0,0}` = none).
@@ -352,17 +352,17 @@ pub fn events() EventFrame {
 // bindings + the press queries; contexts, injection, and axis modifiers land
 // in v0.7.0.
 //
-// `action` / `ctx` parameters are `anytype`: pass values of **your own** enum —
+// `action` / `context` parameters are `anytype`: pass values of **your own** enum —
 // the library names no actions or contexts (see `ActionId`). They map to the
 // backend's 16-bit id space via `toId`.
 
 /// Map any enum value to the backend's action/context id. Compile-errors on a
 /// non-enum, so the `anytype` surface still rejects non-enum garbage at the
 /// call site rather than silently.
-inline fn toId(e: anytype) u16 {
-    switch (@typeInfo(@TypeOf(e))) {
-        .@"enum" => return @intCast(@intFromEnum(e)),
-        else => @compileError("expected an enum value (your own action/context enum), got " ++ @typeName(@TypeOf(e))),
+inline fn toId(enum_value: anytype) u16 {
+    switch (@typeInfo(@TypeOf(enum_value))) {
+        .@"enum" => return @intCast(@intFromEnum(enum_value)),
+        else => @compileError("expected an enum value (your own action/context enum), got " ++ @typeName(@TypeOf(enum_value))),
     }
 }
 
@@ -404,8 +404,8 @@ pub fn actionValue(action: anytype) f32 {
 
 /// Push a context onto the input stack; it can shadow lower contexts so the
 /// same key means different things in gameplay vs. a menu. *(since v0.7.0)*
-pub fn pushContext(ctx: anytype) void {
-    _ = toId(ctx);
+pub fn pushContext(context: anytype) void {
+    _ = toId(context);
     @panic("not implemented");
 }
 
@@ -416,8 +416,8 @@ pub fn popContext(comptime Ctx: type) ?Ctx {
 }
 
 /// Replace the top context in place (push+pop without churn). *(since v0.7.0)*
-pub fn replaceTopContext(ctx: anytype) void {
-    _ = toId(ctx);
+pub fn replaceTopContext(context: anytype) void {
+    _ = toId(context);
     @panic("not implemented");
 }
 
@@ -428,8 +428,8 @@ pub fn activeContext(comptime Ctx: type) ?Ctx {
 }
 
 /// Whether a given context is anywhere on the active stack. *(since v0.7.0)*
-pub fn isContextActive(ctx: anytype) bool {
-    _ = toId(ctx);
+pub fn isContextActive(context: anytype) bool {
+    _ = toId(context);
     @panic("not implemented");
 }
 
@@ -450,19 +450,19 @@ pub fn now() u64 {
 }
 
 /// Ticks per second of the high-resolution performance counter. *(since v0.6.0)*
-pub fn perfFreq() u64 {
-    return backend.perfFreq();
+pub fn performanceFrequency() u64 {
+    return backend.performanceFrequency();
 }
 
 /// Raw high-resolution performance counter value (divide deltas by
-/// `perfFreq()` for seconds). *(since v0.6.0)*
-pub fn perfCounter() u64 {
-    return backend.perfCounter();
+/// `performanceFrequency()` for seconds). *(since v0.6.0)*
+pub fn performanceCounter() u64 {
+    return backend.performanceCounter();
 }
 
-/// Block the calling thread for at least `ns` nanoseconds. *(since v0.6.0)*
-pub fn sleep(ns: u64) void {
-    backend.sleep(ns);
+/// Block the calling thread for at least `nanoseconds`. *(since v0.6.0)*
+pub fn sleep(nanoseconds: u64) void {
+    backend.sleep(nanoseconds);
 }
 
 // =============================================================================
@@ -471,17 +471,17 @@ pub fn sleep(ns: u64) void {
 
 /// Per-user, per-app directory for **persistent** data (saves, config),
 /// created if needed. Caller owns the returned path — free it. *(since v0.8.0)*
-pub fn appDataDir(allocator: std.mem.Allocator, app_name: []const u8) ![]u8 {
+pub fn applicationDataDirectory(allocator: std.mem.Allocator, application_name: []const u8) ![]u8 {
     _ = allocator;
-    _ = app_name;
+    _ = application_name;
     @panic("not implemented");
 }
 
 /// Per-user, per-app directory for **disposable** cache data. Caller owns the
 /// returned path — free it. *(since v0.8.0)*
-pub fn appCacheDir(allocator: std.mem.Allocator, app_name: []const u8) ![]u8 {
+pub fn applicationCacheDirectory(allocator: std.mem.Allocator, application_name: []const u8) ![]u8 {
     _ = allocator;
-    _ = app_name;
+    _ = application_name;
     @panic("not implemented");
 }
 
@@ -553,10 +553,10 @@ pub fn glCreateContext(window: *Window) !*GlContext {
     @panic("not implemented");
 }
 
-/// Make `ctx` current on `window` for the calling thread.
-pub fn glMakeCurrent(window: *Window, ctx: *GlContext) !void {
+/// Make `context` current on `window` for the calling thread.
+pub fn glMakeCurrent(window: *Window, context: *GlContext) !void {
     _ = window;
-    _ = ctx;
+    _ = context;
     @panic("not implemented");
 }
 
@@ -580,8 +580,8 @@ pub fn glGetProcAddress(name: [*:0]const u8) ?*const anyopaque {
 }
 
 /// Destroy a GL context created by `glCreateContext`.
-pub fn glDestroyContext(ctx: *GlContext) void {
-    _ = ctx;
+pub fn glDestroyContext(context: *GlContext) void {
+    _ = context;
     @panic("not implemented");
 }
 

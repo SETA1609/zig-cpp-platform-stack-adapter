@@ -56,10 +56,10 @@ test "extensible enums are non-exhaustive and u16-backed" {
     try std.testing.expectEqual(u16, @typeInfo(platform.KeyCode).@"enum".tag_type);
 }
 
-// WHEN constructing a default KeyMods · GIVEN no fields set · THEN it is one byte and every modifier bit is false.
-test "KeyMods is a single byte and defaults to no modifiers" {
-    try std.testing.expectEqual(@as(usize, 1), @sizeOf(platform.KeyMods));
-    const m: platform.KeyMods = .{};
+// WHEN constructing a default KeyModifiers · GIVEN no fields set · THEN it is one byte and every modifier bit is false.
+test "KeyModifiers is a single byte and defaults to no modifiers" {
+    try std.testing.expectEqual(@as(usize, 1), @sizeOf(platform.KeyModifiers));
+    const m: platform.KeyModifiers = .{};
     try std.testing.expect(!m.shift and !m.control and !m.alt and !m.gui);
     try std.testing.expect(!m.caps_lock and !m.num_lock);
 }

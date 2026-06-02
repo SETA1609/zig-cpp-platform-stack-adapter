@@ -7,13 +7,13 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 > **Status detail:** the **v0.6.0 core is implemented** on the SDL3 backend —
 > windowing (`Window` create/destroy/size/setSize/scaleFactor/setTitle/
 > setPosition/position/shouldClose), the event pump (`pollAllEvents` /
-> `nextEvent` / `events`), time (`now` / `perfFreq` / `perfCounter` / `sleep`),
+> `nextEvent` / `events`), time (`now` / `performanceFrequency` / `performanceCounter` / `sleep`),
 > **action-mapped input** (`bindAction` / `actionPressed` / `actionJustPressed` /
 > `injectAction`, generic over *your own* action enum), and the **Vulkan
 > hand-off** (per-OS native-handle getters + `requiredVulkanInstanceExtensions`).
 > Still `@panic("not implemented")` stubs: the **OpenGL path**
 > (`glCreateContext`/…), **input contexts** (`pushContext`/…),
-> **`capabilities()`**, and **filesystem paths** (`appDataDir`/…) — see
+> **`capabilities()`**, and **filesystem paths** (`applicationDataDirectory`/…) — see
 > [`docs/ROADMAP.md`](docs/ROADMAP.md). Calling a not-yet-implemented function
 > traps at runtime with a clear message.
 

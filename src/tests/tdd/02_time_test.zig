@@ -1,4 +1,4 @@
-//! Ladder step 2 — **time** (`now` / `perfFreq` / `perfCounter` / `sleep`).
+//! Ladder step 2 — **time** (`now` / `performanceFrequency` / `performanceCounter` / `sleep`).
 //! *(v0.6.0)* Needs step 1 (`init`). Flip each function's `done` flag as you
 //! implement it; the cross tests need both their flags. See `CONTRIBUTING.md`.
 
@@ -9,8 +9,8 @@ const gate = h.gate;
 
 const done = .{
     .now = true,
-    .perfFreq = true,
-    .perfCounter = true,
+    .performanceFrequency = true,
+    .performanceCounter = true,
     .sleep = true,
 };
 
@@ -44,59 +44,59 @@ test "now: advances across a short sleep" {
     try std.testing.expect(platform.now() > t0);
 }
 
-// WHEN reading perfFreq · GIVEN the platform is started · THEN the frequency is positive.
-test "perfFreq: is positive" {
-    try gate(done.perfFreq);
+// WHEN reading performanceFrequency · GIVEN the platform is started · THEN the frequency is positive.
+test "performanceFrequency: is positive" {
+    try gate(done.performanceFrequency);
     try h.startup();
     defer platform.deinit();
-    try std.testing.expect(platform.perfFreq() > 0);
+    try std.testing.expect(platform.performanceFrequency() > 0);
 }
 
-// WHEN reading perfFreq twice · GIVEN the platform is started · THEN both readings are equal.
-test "perfFreq: is stable across calls" {
-    try gate(done.perfFreq);
+// WHEN reading performanceFrequency twice · GIVEN the platform is started · THEN both readings are equal.
+test "performanceFrequency: is stable across calls" {
+    try gate(done.performanceFrequency);
     try h.startup();
     defer platform.deinit();
-    try std.testing.expectEqual(platform.perfFreq(), platform.perfFreq());
+    try std.testing.expectEqual(platform.performanceFrequency(), platform.performanceFrequency());
 }
 
-// WHEN reading perfFreq · GIVEN the platform is started · THEN the frequency is at least 1000 Hz (high resolution).
-test "perfFreq: is a high-resolution frequency (>= 1000 Hz)" {
-    try gate(done.perfFreq);
+// WHEN reading performanceFrequency · GIVEN the platform is started · THEN the frequency is at least 1000 Hz (high resolution).
+test "performanceFrequency: is a high-resolution frequency (>= 1000 Hz)" {
+    try gate(done.performanceFrequency);
     try h.startup();
     defer platform.deinit();
-    try std.testing.expect(platform.perfFreq() >= 1000);
+    try std.testing.expect(platform.performanceFrequency() >= 1000);
 }
 
-// WHEN reading perfCounter twice back-to-back · GIVEN the platform is started · THEN the second reading is greater than or equal to the first.
-test "perfCounter: is non-decreasing" {
-    try gate(done.perfCounter);
+// WHEN reading performanceCounter twice back-to-back · GIVEN the platform is started · THEN the second reading is greater than or equal to the first.
+test "performanceCounter: is non-decreasing" {
+    try gate(done.performanceCounter);
     try h.startup();
     defer platform.deinit();
-    const c0 = platform.perfCounter();
-    const c1 = platform.perfCounter();
+    const c0 = platform.performanceCounter();
+    const c1 = platform.performanceCounter();
     try std.testing.expect(c1 >= c0);
 }
 
-// WHEN reading perfCounter before and after a 2ms sleep · GIVEN the platform is started · THEN the later reading is strictly greater than the earlier one.
-test "perfCounter: advances across a sleep" {
-    try gate(done.perfCounter and done.sleep);
+// WHEN reading performanceCounter before and after a 2ms sleep · GIVEN the platform is started · THEN the later reading is strictly greater than the earlier one.
+test "performanceCounter: advances across a sleep" {
+    try gate(done.performanceCounter and done.sleep);
     try h.startup();
     defer platform.deinit();
-    const c0 = platform.perfCounter();
+    const c0 = platform.performanceCounter();
     platform.sleep(2 * std.time.ns_per_ms);
-    try std.testing.expect(platform.perfCounter() > c0);
+    try std.testing.expect(platform.performanceCounter() > c0);
 }
 
-// WHEN computing (perfCounter delta)/perfFreq across a 5ms sleep · GIVEN the platform is started · THEN the elapsed seconds is greater than 0 and less than 1.
-test "perfCounter: divided by perfFreq yields a sane elapsed second-count" {
-    try gate(done.perfCounter and done.perfFreq and done.sleep);
+// WHEN computing (performanceCounter delta)/performanceFrequency across a 5ms sleep · GIVEN the platform is started · THEN the elapsed seconds is greater than 0 and less than 1.
+test "performanceCounter: divided by performanceFrequency yields a sane elapsed second-count" {
+    try gate(done.performanceCounter and done.performanceFrequency and done.sleep);
     try h.startup();
     defer platform.deinit();
-    const freq = platform.perfFreq();
-    const c0 = platform.perfCounter();
+    const freq = platform.performanceFrequency();
+    const c0 = platform.performanceCounter();
     platform.sleep(5 * std.time.ns_per_ms);
-    const c1 = platform.perfCounter();
+    const c1 = platform.performanceCounter();
     const elapsed_s = @as(f64, @floatFromInt(c1 - c0)) / @as(f64, @floatFromInt(freq));
     try std.testing.expect(elapsed_s > 0.0 and elapsed_s < 1.0);
 }

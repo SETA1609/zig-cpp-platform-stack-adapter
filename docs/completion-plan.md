@@ -47,7 +47,7 @@ Size: **M** · mostly turns the **~26 currently-skipped** tests green.
 
 Size: **L** · several sessions. Quick wins first.
 
-- [ ] `appDataDir` / `appCacheDir` (`SDL_GetPrefPath` / `GetBasePath`),
+- [ ] `applicationDataDirectory` / `applicationCacheDirectory` (`SDL_GetPrefPath` / `GetBasePath`),
       `openWithSystemDefault` (`SDL_OpenURL`) — all 3 currently `@panic`.
 - [ ] Clipboard (get/set), IME / text-input control (`SDL_StartTextInput` / `Stop`).
 - [ ] Gamepad **device** API: open / enumerate / close + **rumble**,

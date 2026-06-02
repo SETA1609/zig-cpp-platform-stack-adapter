@@ -60,18 +60,18 @@ pub fn now() u64 {
 }
 
 /// Ticks per second of the high-resolution performance counter.
-pub fn perfFreq() u64 {
+pub fn performanceFrequency() u64 {
     return c.SDL_GetPerformanceFrequency();
 }
 
 /// Raw high-resolution performance counter value.
-pub fn perfCounter() u64 {
+pub fn performanceCounter() u64 {
     return c.SDL_GetPerformanceCounter();
 }
 
 /// Block the calling thread for at least `ns` nanoseconds.
-pub fn sleep(ns: u64) void {
-    c.SDL_DelayNS(ns);
+pub fn sleep(nanoseconds: u64) void {
+    c.SDL_DelayNS(nanoseconds);
 }
 
 // =============================================================================
@@ -412,7 +412,7 @@ fn translate(e: *const c.SDL_Event) void {
                 .code = keyFromScancode(e.key.scancode),
                 .pressed = e.type == c.SDL_EVENT_KEY_DOWN,
                 .repeat = e.key.repeat,
-                .mods = modsFrom(e.key.mod),
+                .modifiers = modifiersFrom(e.key.mod),
             };
             ev_keys.append(ally, ke) catch return;
             enqueue(.{ .key = ke });
@@ -452,7 +452,7 @@ fn translate(e: *const c.SDL_Event) void {
     }
 }
 
-fn modsFrom(mod: c.SDL_Keymod) common.KeyMods {
+fn modifiersFrom(mod: c.SDL_Keymod) common.KeyModifiers {
     const m: c_int = mod;
     return .{
         .shift = (m & c.SDL_KMOD_SHIFT) != 0,

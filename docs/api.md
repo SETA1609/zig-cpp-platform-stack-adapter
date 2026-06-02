@@ -128,7 +128,7 @@ pub fn nextEvent() ?Event;          // (1) AoS: drain the queue; null when empty
 pub fn events() EventFrame;         // (2) SoA: per-type slices for batch processing
 
 // Payloads are plain structs, e.g.:
-pub const KeyEvent = struct { code: KeyCode, pressed: bool, repeat: bool, mods: KeyMods };
+pub const KeyEvent = struct { code: KeyCode, pressed: bool, repeat: bool, modifiers: KeyModifiers };
 pub const MouseMotionEvent = struct { x: f32, y: f32, dx: f32, dy: f32 };
 pub const ResizeEvent = struct { w: u32, h: u32 };
 // MouseButton/Scroll/Focus/Gamepad/TextInput/FileDrop events follow the same pattern.
@@ -183,11 +183,11 @@ pub fn actionValue(action: ActionId) f32;            // analog; modifiers applie
 
 // --- stackable input contexts (since v0.7.0) ---
 pub const InputContextId = enum { gameplay, ui_menu, dialog, inventory, cinematic, _ };
-pub fn pushContext(ctx: InputContextId) void;
+pub fn pushContext(context: InputContextId) void;
 pub fn popContext() InputContextId;
-pub fn replaceTopContext(ctx: InputContextId) void;
+pub fn replaceTopContext(context: InputContextId) void;
 pub fn activeContext() InputContextId;
-pub fn isContextActive(ctx: InputContextId) bool;
+pub fn isContextActive(context: InputContextId) bool;
 
 // --- synthetic injection: same downstream path as real input (since v0.7.0) ---
 pub fn injectAction(action: ActionId, pressed: bool, value: f32) void;
@@ -197,16 +197,16 @@ pub fn injectAction(action: ActionId, pressed: bool, value: f32) void;
 
 ```zig
 pub fn now() u64;          // monotonic nanoseconds
-pub fn perfFreq() u64;     // ticks per second
-pub fn perfCounter() u64;  // raw perf counter
+pub fn performanceFrequency() u64;     // ticks per second
+pub fn performanceCounter() u64;  // raw perf counter
 pub fn sleep(ns: u64) void;
 ```
 
 ## Filesystem paths  *(since v0.8.0)*
 
 ```zig
-pub fn appDataDir(allocator: std.mem.Allocator, app_name: []const u8) ![]u8;   // caller frees
-pub fn appCacheDir(allocator: std.mem.Allocator, app_name: []const u8) ![]u8;  // caller frees
+pub fn applicationDataDirectory(allocator: std.mem.Allocator, app_name: []const u8) ![]u8;   // caller frees
+pub fn applicationCacheDirectory(allocator: std.mem.Allocator, app_name: []const u8) ![]u8;  // caller frees
 pub fn openWithSystemDefault(path: []const u8) !void;                          // xdg-open / start / open
 ```
 
@@ -232,11 +232,11 @@ Managed GL context. The GL **loader** (glad / a zig-opengl binding) lives in you
 ```zig
 pub const GlContext = opaque {};
 pub fn glCreateContext(window: *Window) !*GlContext;
-pub fn glMakeCurrent(window: *Window, ctx: *GlContext) !void;
+pub fn glMakeCurrent(window: *Window, context: *GlContext) !void;
 pub fn glSwapWindow(window: *Window) void;
 pub fn glSetSwapInterval(interval: i32) void;                  // 0 off · 1 vsync · -1 adaptive
 pub fn glGetProcAddress(name: [*:0]const u8) ?*const anyopaque;
-pub fn glDestroyContext(ctx: *GlContext) void;
+pub fn glDestroyContext(context: *GlContext) void;
 ```
 
 ## Capabilities  *(since v0.7.0)*

@@ -17,7 +17,7 @@
 4. **OpenGL path** (no GL types beyond an opaque context + proc-address):
    ```zig
    pub fn glCreateContext(window: *Window) !*GlContext;
-   pub fn glMakeCurrent(window: *Window, ctx: *GlContext) !void;
+   pub fn glMakeCurrent(window: *Window, context: *GlContext) !void;
    pub fn glSwapWindow(window: *Window) void;
    pub fn glSetSwapInterval(interval: i32) void;          // vsync
    pub fn glGetProcAddress(name: [*:0]const u8) ?*const anyopaque;

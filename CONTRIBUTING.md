@@ -84,7 +84,7 @@ Implement top-to-bottom. "Functions (flags)" are the booleans in that file's
 | # | File | Functions (flags) | Milestone | Depends on |
 | --- | --- | --- | --- | --- |
 | 1 | `01_lifecycle_test.zig` | `init` / `deinit` (`lifecycle`) | v0.6.0 | — |
-| 2 | `02_time_test.zig` | `now` · `perfFreq` · `perfCounter` · `sleep` | v0.6.0 | 1 |
+| 2 | `02_time_test.zig` | `now` · `performanceFrequency` · `performanceCounter` · `sleep` | v0.6.0 | 1 |
 | 3 | `03_window_test.zig` | `create` · `destroy` · `size` · `shouldClose` · `scaleFactor` · `setSize` | v0.6.0 | 1 |
 | 4 | `04_events_test.zig` | `pollAllEvents` · `nextEvent` · `events` | v0.6.0 | 1, 3 |
 | 5 | `05_binding_test.zig` | `bindAction` · `unbindAction` | v0.6.0 | 1 |
@@ -92,7 +92,7 @@ Implement top-to-bottom. "Functions (flags)" are the booleans in that file's
 | 7 | `07_action_test.zig` | `injectAction` · `actionPressed` · `actionJustPressed` · `actionJustReleased` · `actionValue` | v0.7.0 | 1, 4 |
 | 8 | `08_context_test.zig` | `pushContext` · `popContext` · `replaceTopContext` · `activeContext` · `isContextActive` | v0.7.0 | 1 |
 | 9 | `09_capabilities_test.zig` | `capabilities` | v0.7.0 | 1 |
-| 10 | `10_paths_test.zig` | `appDataDir` · `appCacheDir` | v0.8.0 | 1 |
+| 10 | `10_paths_test.zig` | `applicationDataDirectory` · `applicationCacheDirectory` | v0.8.0 | 1 |
 
 Within a file, a test that exercises more than one function gates on all of them
 (e.g. `setSize` tests also need `size` + `scaleFactor`), so flip the flags a test

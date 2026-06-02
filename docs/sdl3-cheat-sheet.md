@@ -68,7 +68,7 @@ now") is exactly what our action layer uses.
 | `Window.scaleFactor()` | `SDL_GetWindowDisplayScale` |
 | `pollAllEvents()` | `SDL_PumpEvents` loop over `SDL_PollEvent` → translate into our `Event` SoA + queue |
 | `bindAction` + `actionPressed` | bindings resolved each frame against `SDL_GetKeyboardState` / `SDL_GetMouseState` |
-| `now()` / `perfCounter()` / `sleep()` | `SDL_GetTicksNS` / `SDL_GetPerformanceCounter` / `SDL_DelayNS` |
+| `now()` / `performanceCounter()` / `sleep()` | `SDL_GetTicksNS` / `SDL_GetPerformanceCounter` / `SDL_DelayNS` |
 | `getX11Handle` / `getWaylandHandle` / … | `SDL_GetWindowProperties` + the `SDL_PROP_WINDOW_*` keys |
 | `requiredVulkanInstanceExtensions()` | `SDL_Vulkan_LoadLibrary(null)` + `SDL_Vulkan_GetInstanceExtensions` |
 
