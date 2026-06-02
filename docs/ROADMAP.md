@@ -24,14 +24,16 @@ This lets a renderer migrate **from OpenGL to Vulkan in stages**: keep the GL pa
 
 ## Version milestones
 
-| Version | Scope | Enables |
-| --- | --- | --- |
-| **v0.6.0** | SDL3 minimal: `Window` create/destroy, event pump (`nextEvent`/`pollAllEvents`), **renderer selection (`vulkan`/`opengl`/`none`)**, per-OS native handle getters + `requiredVulkanInstanceExtensions()` (Vulkan path), GL context (`glCreateContext`/`glSwapWindow`/`glGetProcAddress`) (OpenGL path), minimal key action binding (`menu_pause`→ESC) | First usable release — open a window, pump events, create a Vulkan **or** OpenGL surface, quit on ESC |
-| **v0.7.0** | Action-mapped input complete: `bindAction`/`actionPressed`/`actionValue`, axis modifiers (deadzone/smooth/scale/invert), Input Mapping Contexts (push/pop stack), synthetic injection; bindings loadable from TOML | Rebindable, context-aware input for real games |
-| **v0.8.0** | Device & I/O breadth: gamepad (Steam Input mapping), sensor (gyro/IMU), haptic (rumble), clipboard, filesystem paths (`appDataDir`/`appCacheDir`), power info, IME / text input | Full controller + desktop-integration support |
-| **v0.9.0** | 2D rendering primitives (`SDL_Renderer`) | A built-in 2D draw path for HUD/widget consumers |
-| **v0.10.0** | Default audio backend (`SDL_AudioStream`) | Basic audio without a separate library |
-| **v1.0.0** | Full API surface stable; capability flags complete; Linux (X11 + Wayland) + Windows + Android validated in CI; macOS deferred | Production-ready 1.0 |
+Status: ✅ shipped · 🚧 partial · ⬜ planned.
+
+| Version | Status | Scope | Enables |
+| --- | --- | --- | --- |
+| **v0.6.0** | 🚧 | SDL3 minimal: `Window` create/destroy + `size`/`setSize`/`setPosition`/`setTitle`/`scaleFactor`/`shouldClose`, event pump (`nextEvent`/`pollAllEvents`/`events`), **renderer selection (`vulkan`/`opengl`/`none`)**, per-OS native handle getters + `requiredVulkanInstanceExtensions()` (Vulkan path), minimal key action binding. **Done** except the **GL context path** (`glCreateContext`/`glSwapWindow`/`glGetProcAddress`), still stubbed (`@panic`). | Open a window, pump events, create a Vulkan surface, quit on ESC |
+| **v0.7.0** | 🚧 | Action-mapped input + window/mouse control. **Shipped:** `bindAction`/`unbindAction`/`actionPressed`/`actionJustPressed`/`actionJustReleased`; **runtime window state** (`setFullscreen`/`setResizable`/`setBordered` + `is*`, `setMinSize`/`setMaxSize` + getters, `minimize`/`maximize`/`restore`/`raise`); **mouse capture & cursor** (`setRelativeMouseMode`/`relativeMouseMode`, `warpMouse`, `setMouseGrab`/`mouseGrabbed`, global `showCursor`/`hideCursor`/`cursorVisible`). **Remaining:** `actionValue` + axis modifiers (deadzone/smooth/scale/invert), Input Mapping Contexts (push/pop stack), synthetic injection, TOML-loadable bindings. | Rebindable input, FPS-style mouse capture, and full runtime window control |
+| **v0.8.0** | ⬜ | Device & I/O breadth: gamepad device API (Steam Input mapping), sensor (gyro/IMU), haptic (rumble), clipboard, filesystem paths (`appDataDir`/`appCacheDir`), power info, IME / text input | Full controller + desktop-integration support |
+| **v0.9.0** | ⬜ | 2D rendering primitives (`SDL_Renderer`) | A built-in 2D draw path for HUD/widget consumers |
+| **v0.10.0** | ⬜ | Default audio backend (`SDL_AudioStream`) | Basic audio without a separate library |
+| **v1.0.0** | ⬜ | Full API surface stable; capability flags complete; Linux (X11 + Wayland) + Windows + Android validated in CI; macOS deferred | Production-ready 1.0 |
 
 Versions beyond v0.6.0 may resequence as consumer needs firm up.
 
