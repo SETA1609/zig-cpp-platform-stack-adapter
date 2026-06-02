@@ -11,13 +11,16 @@
 > divergence is the test — repeat the relevant rows on each target
 > (`x86_64-linux-gnu` under **both** X11 and Wayland, and `x86_64-windows-gnu`).
 
-## Coverage status — as of `49d2b7c`
+## Coverage status — as of `1a05064`
 
-What is **proven today**. Every public function is still a `@panic("not
-implemented")` stub at this commit, so the entire behavioral surface is
-unproven — only the pure-data contract layer is green. Re-tick each box as its
-backend lands and the matching TDD test / e2e procedure passes; bump the commit
-hash in this heading when you do.
+What is **proven today**. The v0.6.0 core and the v0.7.0 window-state /
+mouse-capture / cursor calls are implemented on the SDL3 backend; the OpenGL
+path, input contexts, `capabilities()`, and the filesystem paths are still
+`@panic("not implemented")` stubs, so those behaviors remain unproven. The
+in-process invariants are exercised by the gated TDD suite; the rows below stay
+unchecked until each is confirmed against a real desktop session. Re-tick each
+box as its backend lands and the matching TDD test / e2e procedure passes; bump
+the commit hash in this heading when you do.
 
 **Automated — `zig build test`** (contract/data, must stay green):
 
@@ -27,6 +30,8 @@ hash in this heading when you do.
 
 - [ ] Lifecycle: `init` / `deinit`
 - [ ] Window: `create` / `destroy` / `size` / `shouldClose` / `scaleFactor` / `setSize`
+- [ ] Window state: `setFullscreen`/`isFullscreen` / `setResizable`/`isResizable` / `setBordered`/`isBordered` / `setMinSize`/`minSize` / `setMaxSize`/`maxSize` / `minimize`/`maximize`/`restore`/`raise` (`11_window_state_test.zig`)
+- [ ] Mouse capture & cursor: `setRelativeMouseMode`/`relativeMouseMode` / `warpMouse` / `setMouseGrab`/`mouseGrabbed` / `showCursor`/`hideCursor`/`cursorVisible` (`12_mouse_test.zig`)
 - [ ] Events: `pollAllEvents` / `nextEvent` / `events` (idle-frame invariants)
 - [ ] Action state machine: `injectAction` → `actionPressed` / `actionJustPressed` / `actionJustReleased` / `actionValue`
 - [ ] Action bindings accept every shape: `bindAction` / `unbindAction`

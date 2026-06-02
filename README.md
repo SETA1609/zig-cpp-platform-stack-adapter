@@ -11,6 +11,11 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 > **action-mapped input** (`bindAction` / `actionPressed` / `actionJustPressed` /
 > `injectAction`, generic over *your own* action enum), and the **Vulkan
 > hand-off** (per-OS native-handle getters + `requiredVulkanInstanceExtensions`).
+> **v0.7.0** added **runtime window state** (`setFullscreen`/`setResizable`/
+> `setBordered` + the `is*` getters, `setMinSize`/`setMaxSize` + getters,
+> `minimize`/`maximize`/`restore`/`raise`) and **mouse capture & cursor**
+> (`setRelativeMouseMode`/`relativeMouseMode`, `warpMouse`, `setMouseGrab`/
+> `mouseGrabbed`, global `showCursor`/`hideCursor`/`cursorVisible`).
 > Still `@panic("not implemented")` stubs: the **OpenGL path**
 > (`glCreateContext`/…), **input contexts** (`pushContext`/…),
 > **`capabilities()`**, and **filesystem paths** (`applicationDataDirectory`/…) — see

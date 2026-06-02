@@ -6,7 +6,7 @@
 > const platform = @import("platform");
 > ```
 >
-> **Now authored:** this surface lives as code in [`../src/root.zig`](../src/root.zig) (functions) and [`../src/common.zig`](../src/common.zig) (types), with doc-comments matching the descriptions below. Every function is a `@panic("not implemented")` stub until the SDL3 backend lands. Numeric values for the enums (for serialization / rebindable bindings) are in [`enum-values.md`](enum-values.md).
+> **Now authored:** this surface lives as code in [`../src/root.zig`](../src/root.zig) (functions) and [`../src/common.zig`](../src/common.zig) (types), with doc-comments matching the descriptions below. The v0.6.0 core and the v0.7.0 window-state / mouse-capture / cursor calls are implemented on the SDL3 backend; the OpenGL path, input contexts, `capabilities()`, and the filesystem paths are still `@panic("not implemented")` stubs (see [`ROADMAP.md`](ROADMAP.md)). Numeric values for the enums (for serialization / rebindable bindings) are in [`enum-values.md`](enum-values.md).
 
 ## Conventions
 

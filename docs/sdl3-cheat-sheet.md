@@ -66,6 +66,8 @@ now") is exactly what our action layer uses.
 | `Window.create(opts)` | `SDL_CreateWindow` (+ `SDL_SetPointerProperty` to stash our per-window state) |
 | `Window.size()` / `setSize()` | `SDL_GetWindowSizeInPixels` / `SDL_SetWindowSize` + `SDL_SyncWindow` |
 | `Window.scaleFactor()` | `SDL_GetWindowDisplayScale` |
+| window state (`setFullscreen`/`setResizable`/`setBordered` + `is*`, `setMinSize`/`setMaxSize` + getters, `minimize`/`maximize`/`restore`/`raise`) | `SDL_SetWindowFullscreen` / `SDL_SetWindowResizable` / `SDL_SetWindowBordered` / `SDL_SetWindowMinimumSize` / `SDL_SetWindowMaximumSize` / `SDL_MinimizeWindow` / `SDL_MaximizeWindow` / `SDL_RestoreWindow` / `SDL_RaiseWindow` (+ `SDL_GetWindowFlags` for the queries) |
+| mouse capture & cursor (`setRelativeMouseMode`/`warpMouse`/`setMouseGrab`, `showCursor`/`hideCursor`) | `SDL_SetWindowRelativeMouseMode` / `SDL_WarpMouseInWindow` / `SDL_SetWindowMouseGrab` / `SDL_ShowCursor` / `SDL_HideCursor` |
 | `pollAllEvents()` | `SDL_PumpEvents` loop over `SDL_PollEvent` → translate into our `Event` SoA + queue |
 | `bindAction` + `actionPressed` | bindings resolved each frame against `SDL_GetKeyboardState` / `SDL_GetMouseState` |
 | `now()` / `performanceCounter()` / `sleep()` | `SDL_GetTicksNS` / `SDL_GetPerformanceCounter` / `SDL_DelayNS` |

@@ -16,8 +16,8 @@ grab, warp, show/hide/visible) · event pump (`nextEvent`/`pollAllEvents`/`event
 · key action binding (`bindAction`/`actionPressed`/`actionJust*`) · **X11 +
 Wayland** native handles + `requiredVulkanInstanceExtensions` · time.
 
-🚧 **16 public functions still `@panic`**, plus `capabilities()`. Mapped to
-milestones below.
+🚧 **14 public functions still `@panic`** (5 input-context, 3 filesystem-path,
+6 OpenGL), plus `capabilities()`. Mapped to milestones below.
 
 ## Phase P1 — finish v0.6 (GL path + capabilities)
 
