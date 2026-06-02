@@ -177,6 +177,73 @@ pub fn windowPosition(ws: *WindowState) common.Position {
     return .{ .x = @intCast(x), .y = @intCast(y) };
 }
 
+// -- window state (ladder step 11) -------------------------------------------
+
+pub fn windowSetFullscreen(ws: *WindowState, on: bool) void {
+    _ = c.SDL_SetWindowFullscreen(ws.sdl, on);
+    // Fullscreen is WM-mediated/async; sync so a following query reflects it.
+    _ = c.SDL_SyncWindow(ws.sdl);
+}
+
+pub fn windowIsFullscreen(ws: *WindowState) bool {
+    return (c.SDL_GetWindowFlags(ws.sdl) & c.SDL_WINDOW_FULLSCREEN) != 0;
+}
+
+pub fn windowSetResizable(ws: *WindowState, on: bool) void {
+    _ = c.SDL_SetWindowResizable(ws.sdl, on);
+}
+
+pub fn windowIsResizable(ws: *WindowState) bool {
+    return (c.SDL_GetWindowFlags(ws.sdl) & c.SDL_WINDOW_RESIZABLE) != 0;
+}
+
+pub fn windowSetBordered(ws: *WindowState, on: bool) void {
+    _ = c.SDL_SetWindowBordered(ws.sdl, on);
+}
+
+pub fn windowIsBordered(ws: *WindowState) bool {
+    // SDL tracks the *absence* of a border as the BORDERLESS flag.
+    return (c.SDL_GetWindowFlags(ws.sdl) & c.SDL_WINDOW_BORDERLESS) == 0;
+}
+
+pub fn windowSetMinSize(ws: *WindowState, w: u32, h: u32) void {
+    _ = c.SDL_SetWindowMinimumSize(ws.sdl, @intCast(w), @intCast(h));
+}
+
+pub fn windowMinSize(ws: *WindowState) common.Size {
+    var w: c_int = 0;
+    var h: c_int = 0;
+    _ = c.SDL_GetWindowMinimumSize(ws.sdl, &w, &h);
+    return .{ .w = @intCast(w), .h = @intCast(h) };
+}
+
+pub fn windowSetMaxSize(ws: *WindowState, w: u32, h: u32) void {
+    _ = c.SDL_SetWindowMaximumSize(ws.sdl, @intCast(w), @intCast(h));
+}
+
+pub fn windowMaxSize(ws: *WindowState) common.Size {
+    var w: c_int = 0;
+    var h: c_int = 0;
+    _ = c.SDL_GetWindowMaximumSize(ws.sdl, &w, &h);
+    return .{ .w = @intCast(w), .h = @intCast(h) };
+}
+
+pub fn windowMinimize(ws: *WindowState) void {
+    _ = c.SDL_MinimizeWindow(ws.sdl);
+}
+
+pub fn windowMaximize(ws: *WindowState) void {
+    _ = c.SDL_MaximizeWindow(ws.sdl);
+}
+
+pub fn windowRestore(ws: *WindowState) void {
+    _ = c.SDL_RestoreWindow(ws.sdl);
+}
+
+pub fn windowRaise(ws: *WindowState) void {
+    _ = c.SDL_RaiseWindow(ws.sdl);
+}
+
 // =============================================================================
 // Vulkan hand-off  (ladder step 6)
 // =============================================================================

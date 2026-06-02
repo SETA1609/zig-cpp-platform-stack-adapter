@@ -172,6 +172,81 @@ pub const Window = opaque {
     pub fn shouldClose(self: *Window) bool {
         return backend.windowShouldClose(self.state());
     }
+
+    // -- window state  (since v0.7.0) ----------------------------------------
+
+    /// Enter or leave (borderless) fullscreen on the window's current display.
+    /// Best-effort + WM-mediated; query the result with `isFullscreen`.
+    pub fn setFullscreen(self: *Window, on: bool) void {
+        backend.windowSetFullscreen(self.state(), on);
+    }
+
+    /// `true` while the window is in fullscreen.
+    pub fn isFullscreen(self: *Window) bool {
+        return backend.windowIsFullscreen(self.state());
+    }
+
+    /// Allow or forbid the user resizing the window at runtime.
+    pub fn setResizable(self: *Window, on: bool) void {
+        backend.windowSetResizable(self.state(), on);
+    }
+
+    /// `true` while the window is user-resizable.
+    pub fn isResizable(self: *Window) bool {
+        return backend.windowIsResizable(self.state());
+    }
+
+    /// Show or hide the OS title bar and border.
+    pub fn setBordered(self: *Window, on: bool) void {
+        backend.windowSetBordered(self.state(), on);
+    }
+
+    /// `true` while the window has its OS decorations (title bar + border).
+    pub fn isBordered(self: *Window) bool {
+        return backend.windowIsBordered(self.state());
+    }
+
+    /// Clamp the smallest size the user can resize the window to (pixels).
+    /// `{0,0}` removes the constraint.
+    pub fn setMinSize(self: *Window, s: Size) void {
+        backend.windowSetMinSize(self.state(), s.w, s.h);
+    }
+
+    /// The current minimum-size constraint (`{0,0}` = none).
+    pub fn minSize(self: *Window) Size {
+        return backend.windowMinSize(self.state());
+    }
+
+    /// Clamp the largest size the user can resize the window to (pixels).
+    /// `{0,0}` removes the constraint.
+    pub fn setMaxSize(self: *Window, s: Size) void {
+        backend.windowSetMaxSize(self.state(), s.w, s.h);
+    }
+
+    /// The current maximum-size constraint (`{0,0}` = none).
+    pub fn maxSize(self: *Window) Size {
+        return backend.windowMaxSize(self.state());
+    }
+
+    /// Minimize (iconify) the window. WM-mediated.
+    pub fn minimize(self: *Window) void {
+        backend.windowMinimize(self.state());
+    }
+
+    /// Maximize the window to fill the available work area. WM-mediated.
+    pub fn maximize(self: *Window) void {
+        backend.windowMaximize(self.state());
+    }
+
+    /// Restore the window from minimized/maximized back to its prior size.
+    pub fn restore(self: *Window) void {
+        backend.windowRestore(self.state());
+    }
+
+    /// Raise the window above its siblings and request focus. WM-mediated.
+    pub fn raise(self: *Window) void {
+        backend.windowRaise(self.state());
+    }
 };
 
 // =============================================================================
