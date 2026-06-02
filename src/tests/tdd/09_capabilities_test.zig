@@ -12,6 +12,7 @@ const done = .{
     .capabilities = false,
 };
 
+// WHEN calling capabilities and reading each field · GIVEN a started platform · THEN it returns a value exposing all expected fields (a missing/renamed one would fail to compile).
 test "capabilities: callable and returns a value with all fields" {
     try gate(done.capabilities);
     try h.startup();
@@ -24,6 +25,7 @@ test "capabilities: callable and returns a value with all fields" {
     _ = caps.high_dpi_scale_per_monitor;
 }
 
+// WHEN calling capabilities twice · GIVEN a started platform · THEN the can_set/can_query window-position fields match across both calls.
 test "capabilities: is stable across calls" {
     try gate(done.capabilities);
     try h.startup();
@@ -34,6 +36,7 @@ test "capabilities: is stable across calls" {
     try std.testing.expectEqual(a.can_query_window_position, b.can_query_window_position);
 }
 
+// WHEN inspecting the capabilities flags · GIVEN a backend that can set window position · THEN it can also query window position (set implies query).
 test "capabilities: setting position implies it can be queried" {
     try gate(done.capabilities);
     try h.startup();

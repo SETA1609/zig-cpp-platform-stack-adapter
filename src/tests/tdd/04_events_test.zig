@@ -15,6 +15,7 @@ const done = .{
     .events = true,
 };
 
+// WHEN calling pollAllEvents once · GIVEN a started platform with an open window and no input · THEN it returns without error.
 test "pollAllEvents: callable once without input" {
     try gate(done.pollAllEvents);
     try h.startup();
@@ -24,6 +25,7 @@ test "pollAllEvents: callable once without input" {
     platform.pollAllEvents();
 }
 
+// WHEN calling pollAllEvents five times in a loop · GIVEN a started platform with an open window · THEN every call returns without error.
 test "pollAllEvents: callable repeatedly" {
     try gate(done.pollAllEvents);
     try h.startup();
@@ -34,6 +36,7 @@ test "pollAllEvents: callable repeatedly" {
     while (i < 5) : (i += 1) platform.pollAllEvents();
 }
 
+// WHEN calling pollAllEvents on an idle frame then querying shouldClose · GIVEN a started platform with a fresh window · THEN shouldClose is false.
 test "pollAllEvents: leaves a fresh window not closing" {
     try gate(done.pollAllEvents);
     try h.startup();
@@ -44,6 +47,7 @@ test "pollAllEvents: leaves a fresh window not closing" {
     try std.testing.expect(!win.shouldClose());
 }
 
+// WHEN draining nextEvent after polling an idle frame · GIVEN a started platform with no synthetic input · THEN the queue drains to null within a bounded number of pops (≤ 1024).
 test "nextEvent: an idle frame's queue is finite and drains" {
     try gate(done.pollAllEvents and done.nextEvent);
     try h.startup();
@@ -61,6 +65,7 @@ test "nextEvent: an idle frame's queue is finite and drains" {
     try std.testing.expect(pops <= 1024);
 }
 
+// WHEN draining nextEvent after polling an idle frame · GIVEN a started platform with no close input · THEN none of the popped events is a .close event.
 test "nextEvent: an idle frame delivers no close event" {
     try gate(done.pollAllEvents and done.nextEvent);
     try h.startup();
@@ -76,6 +81,7 @@ test "nextEvent: an idle frame delivers no close event" {
     }
 }
 
+// WHEN calling nextEvent once more after fully draining the queue · GIVEN a started platform on an idle frame · THEN it returns null.
 test "nextEvent: returns null after the queue is drained" {
     try gate(done.pollAllEvents and done.nextEvent);
     try h.startup();
@@ -91,6 +97,7 @@ test "nextEvent: returns null after the queue is drained" {
     try std.testing.expect(platform.nextEvent() == null);
 }
 
+// WHEN reading the events() SoA view after polling an idle frame · GIVEN a started platform with no close input · THEN close_requested is false.
 test "events: a freshly pumped frame has no pending close" {
     try gate(done.pollAllEvents and done.events);
     try h.startup();
@@ -101,6 +108,7 @@ test "events: a freshly pumped frame has no pending close" {
     try std.testing.expect(!platform.events().close_requested);
 }
 
+// WHEN reading the events() SoA view twice without re-polling · GIVEN a started platform on an idle frame · THEN both reads report the same close_requested and keys length (the read does not consume).
 test "events: the SoA view is non-consuming (idempotent across two reads)" {
     try gate(done.pollAllEvents and done.events);
     try h.startup();
@@ -114,6 +122,7 @@ test "events: the SoA view is non-consuming (idempotent across two reads)" {
     try std.testing.expectEqual(a.keys.len, b.keys.len);
 }
 
+// WHEN reading events().keys after polling an idle frame · GIVEN a started platform with no keyboard input · THEN the keys length is 0.
 test "events: idle frame queues no keyboard events" {
     try gate(done.pollAllEvents and done.events);
     try h.startup();

@@ -20,6 +20,7 @@ const done = .{
     .setSize = true,
 };
 
+// WHEN creating a headless (renderer .none) window · GIVEN a started platform · THEN the returned window pointer is non-null.
 test "create: headless window is non-null" {
     try gate(done.create and done.destroy);
     try h.startup();
@@ -29,6 +30,7 @@ test "create: headless window is non-null" {
     try std.testing.expect(@intFromPtr(win) != 0);
 }
 
+// WHEN creating a window with renderer .vulkan · GIVEN a started platform · THEN the returned window pointer is non-null.
 test "create: vulkan-renderer window is non-null" {
     try gate(done.create and done.destroy);
     try h.startup();
@@ -38,6 +40,7 @@ test "create: vulkan-renderer window is non-null" {
     try std.testing.expect(@intFromPtr(win) != 0);
 }
 
+// WHEN creating a window requesting 800x600 and reading size · GIVEN a started platform · THEN size is positive, and at scale 1.0 it equals exactly 800x600.
 test "create: respects a custom initial size (scale 1.0)" {
     try gate(done.create and done.destroy and done.size and done.scaleFactor);
     try h.startup();
@@ -52,6 +55,7 @@ test "create: respects a custom initial size (scale 1.0)" {
     }
 }
 
+// WHEN creating, destroying, then creating another headless window · GIVEN a started platform · THEN both create/destroy cycles succeed.
 test "destroy: create→destroy→create again succeeds" {
     try gate(done.create and done.destroy);
     try h.startup();
@@ -62,6 +66,7 @@ test "destroy: create→destroy→create again succeeds" {
     b.destroy();
 }
 
+// WHEN destroying two simultaneously-open headless windows · GIVEN a started platform · THEN each destroys cleanly and independently.
 test "destroy: two live windows destroy independently" {
     try gate(done.create and done.destroy);
     try h.startup();
@@ -72,6 +77,7 @@ test "destroy: two live windows destroy independently" {
     b.destroy();
 }
 
+// WHEN destroying a single headless window · GIVEN a started platform · THEN it tears down without error.
 test "destroy: a single window tears down cleanly" {
     try gate(done.create and done.destroy);
     try h.startup();
@@ -80,6 +86,7 @@ test "destroy: a single window tears down cleanly" {
     win.destroy();
 }
 
+// WHEN reading size of a 1024x768 window · GIVEN a started platform · THEN both width and height are positive.
 test "size: reports a positive drawable size" {
     try gate(done.create and done.destroy and done.size);
     try h.startup();
@@ -90,6 +97,7 @@ test "size: reports a positive drawable size" {
     try std.testing.expect(s.w > 0 and s.h > 0);
 }
 
+// WHEN reading size twice on an unchanged window · GIVEN a started platform · THEN both readings report the same width and height.
 test "size: is stable across consecutive reads" {
     try gate(done.create and done.destroy and done.size);
     try h.startup();
@@ -102,6 +110,7 @@ test "size: is stable across consecutive reads" {
     try std.testing.expectEqual(a.h, b.h);
 }
 
+// WHEN reading size of a default-options window · GIVEN a started platform · THEN size is positive, and at scale 1.0 it equals the 1280x720 default.
 test "size: default window matches WindowOptions default (scale 1.0)" {
     try gate(done.create and done.destroy and done.size and done.scaleFactor);
     try h.startup();
@@ -116,6 +125,7 @@ test "size: default window matches WindowOptions default (scale 1.0)" {
     }
 }
 
+// WHEN querying shouldClose on a freshly created window · GIVEN a started platform · THEN it reports false.
 test "shouldClose: a fresh window is not closing" {
     try gate(done.create and done.destroy and done.shouldClose);
     try h.startup();
@@ -125,6 +135,7 @@ test "shouldClose: a fresh window is not closing" {
     try std.testing.expect(!win.shouldClose());
 }
 
+// WHEN querying shouldClose after pollAllEvents on an idle frame · GIVEN a started platform with no close input · THEN it reports false.
 test "shouldClose: still false after an idle poll" {
     try gate(done.create and done.destroy and done.shouldClose);
     try h.startup();
@@ -135,6 +146,7 @@ test "shouldClose: still false after an idle poll" {
     try std.testing.expect(!win.shouldClose());
 }
 
+// WHEN querying shouldClose on two fresh windows · GIVEN a started platform · THEN each reports false independently.
 test "shouldClose: independent per window" {
     try gate(done.create and done.destroy and done.shouldClose);
     try h.startup();
@@ -147,6 +159,7 @@ test "shouldClose: independent per window" {
     try std.testing.expect(!b.shouldClose());
 }
 
+// WHEN reading scaleFactor of a window · GIVEN a started platform · THEN it is greater than 0.
 test "scaleFactor: is positive" {
     try gate(done.create and done.destroy and done.scaleFactor);
     try h.startup();
@@ -156,6 +169,7 @@ test "scaleFactor: is positive" {
     try std.testing.expect(win.scaleFactor() > 0.0);
 }
 
+// WHEN reading scaleFactor of a window · GIVEN a started platform · THEN it is a finite number (not NaN or infinity).
 test "scaleFactor: is finite (not NaN/inf)" {
     try gate(done.create and done.destroy and done.scaleFactor);
     try h.startup();
@@ -165,6 +179,7 @@ test "scaleFactor: is finite (not NaN/inf)" {
     try std.testing.expect(std.math.isFinite(win.scaleFactor()));
 }
 
+// WHEN reading scaleFactor twice on an unchanged window · GIVEN a started platform · THEN both readings are equal.
 test "scaleFactor: is stable across reads" {
     try gate(done.create and done.destroy and done.scaleFactor);
     try h.startup();
@@ -174,6 +189,7 @@ test "scaleFactor: is stable across reads" {
     try std.testing.expectEqual(win.scaleFactor(), win.scaleFactor());
 }
 
+// WHEN setSize shrinks an 800x600 resizable window to 640x480 and events are pumped · GIVEN scale 1.0 on a floating WM · THEN size() reports exactly 640x480.
 test "setSize: shrinking is reflected by size() (scale 1.0, floating WM)" {
     try gate(done.create and done.destroy and done.setSize and done.size and done.scaleFactor);
     try h.startup();
@@ -189,6 +205,7 @@ test "setSize: shrinking is reflected by size() (scale 1.0, floating WM)" {
     }
 }
 
+// WHEN setSize grows a 640x480 resizable window to 1024x768 and events are pumped · GIVEN scale 1.0 on a floating WM · THEN size() reports exactly 1024x768.
 test "setSize: growing is reflected by size() (scale 1.0, floating WM)" {
     try gate(done.create and done.destroy and done.setSize and done.size and done.scaleFactor);
     try h.startup();
@@ -204,6 +221,7 @@ test "setSize: growing is reflected by size() (scale 1.0, floating WM)" {
     }
 }
 
+// WHEN setSize sets a resizable window to 900x700 and events are pumped · GIVEN a started platform · THEN size() reports a positive width and height.
 test "setSize: keeps a positive size" {
     try gate(done.create and done.destroy and done.setSize and done.size);
     try h.startup();
