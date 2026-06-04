@@ -16,8 +16,8 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 > `minimize`/`maximize`/`restore`/`raise`) and **mouse capture & cursor**
 > (`setRelativeMouseMode`/`relativeMouseMode`, `warpMouse`, `setMouseGrab`/
 > `mouseGrabbed`, global `showCursor`/`hideCursor`/`cursorVisible`).
-> Still `@panic("not implemented")` stubs: the **OpenGL path**
-> (`glCreateContext`/…), **input contexts** (`pushContext`/…),
+> Still `@panic("not implemented")` stubs: the **OpenGL context path**
+> (`glCreateContext`/…, now gated in `13_gl_context_test.zig`), **input contexts** (`pushContext`/…),
 > **`capabilities()`**, and **filesystem paths** (`applicationDataDirectory`/…) — see
 > [`docs/ROADMAP.md`](docs/ROADMAP.md). Calling a not-yet-implemented function
 > traps at runtime with a clear message.

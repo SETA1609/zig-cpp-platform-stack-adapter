@@ -26,7 +26,7 @@ the commit hash in this heading when you do.
 
 - [x] Enum numeric values, struct defaults, type layout (`src/tests/api_test.zig`)
 
-**Automated — `zig build test-tdd`** (red→green; all RED now):
+**Automated — `zig build test-tdd`** (red→green; sessions `01`–`07`, `11`, `12` are green, the unimplemented sessions `08`, `09`, `10`, `13` are still RED/gated):
 
 - [ ] Lifecycle: `init` / `deinit`
 - [ ] Window: `create` / `destroy` / `size` / `shouldClose` / `scaleFactor` / `setSize`
@@ -39,6 +39,7 @@ the commit hash in this heading when you do.
 - [ ] Time: `now` / `performanceFrequency` / `performanceCounter` / `sleep`
 - [ ] Filesystem: `applicationDataDirectory` / `applicationCacheDirectory`
 - [ ] Vulkan hand-off: `requiredVulkanInstanceExtensions`; native-handle presence invariants
+- [ ] OpenGL context: `glCreateContext` / `glMakeCurrent` / `glSwapWindow` / `glSetSwapInterval` / `glGetProcAddress` / `glDestroyContext` (`13_gl_context_test.zig`)
 
 **Manual / e2e** (this document; all UNPROVEN now):
 

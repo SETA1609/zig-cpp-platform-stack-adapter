@@ -36,7 +36,7 @@ SDL3-backed body and proving it with the test that already exists for it.
 | Step | File(s) | What it is | When it runs |
 | --- | --- | --- | --- |
 | `zig build test` | `src/tests/api_test.zig` | **Contract / data tests** — enum values, struct defaults, type layout. Need no backend. | **Gates CI** — must always be green. |
-| `zig build test-tdd` | `src/tests/tdd/*` | **Ordered red→green suite** — one file per function group, every test calls the real function and asserts its result. Each is **skipped** behind a `done` flag until implemented. | Off CI. The implemented groups (lifecycle, time, window, events, binding, action, Vulkan hand-off, window state, mouse — sessions `01`–`07`, `11`, `12`) have their flags flipped on and run real assertions; sessions for not-yet-implemented functions (contexts `08`, capabilities `09`, paths `10`, the GL path, and a handful of window-state sub-flags) stay skipped until their backend lands. |
+| `zig build test-tdd` | `src/tests/tdd/*` | **Ordered red→green suite** — one file per function group, every test calls the real function and asserts its result. Each is **skipped** behind a `done` flag until implemented. | Off CI. The implemented groups (lifecycle, time, window, events, binding, action, Vulkan hand-off, window state, mouse — sessions `01`–`07`, `11`, `12`) have their flags flipped on and run real assertions; sessions for not-yet-implemented functions (contexts `08`, capabilities `09`, paths `10`, the GL context path `13` (`13_gl_context_test.zig`), and a handful of window-state sub-flags) stay skipped until their backend lands. |
 
 Functions whose result can't be proven in-process (visual output, real hardware
 input, a live GPU/GL/Vulkan surface) are **not** in the TDD suite — they are e2e
@@ -95,6 +95,9 @@ Implement top-to-bottom. "Functions (flags)" are the booleans in that file's
 | 8 | `08_context_test.zig` | `pushContext` · `popContext` · `replaceTopContext` · `activeContext` · `isContextActive` | v0.7.0 | 1 |
 | 9 | `09_capabilities_test.zig` | `capabilities` | v0.7.0 | 1 |
 | 10 | `10_paths_test.zig` | `applicationDataDirectory` · `applicationCacheDirectory` | v0.8.0 | 1 |
+| 11 | `11_window_state_test.zig` | `setFullscreen` · `isFullscreen` · `setResizable` · `isResizable` · `setBordered` · `isBordered` · `setMinSize` · `minSize` · `setMaxSize` · `maxSize` · `minimize` · `maximize` · `restore` · `raise` | v0.7.0 | 1, 3 |
+| 12 | `12_mouse_test.zig` | `setRelativeMouseMode` · `relativeMouseMode` · `warpMouse` · `setMouseGrab` · `mouseGrabbed` · `showCursor` · `hideCursor` · `cursorVisible` | v0.7.0 | 1, 3 |
+| 13 | `13_gl_context_test.zig` | `glCreateContext` · `glMakeCurrent` · `glSwapWindow` · `glSetSwapInterval` · `glGetProcAddress` · `glDestroyContext` | v0.6.0 | 1, 3 |
 
 Within a file, a test that exercises more than one function gates on all of them
 (e.g. `setSize` tests also need `size` + `scaleFactor`), so flip the flags a test
