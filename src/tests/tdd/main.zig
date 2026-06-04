@@ -20,4 +20,5 @@ test {
     _ = @import("10_paths_test.zig");
     _ = @import("11_window_state_test.zig");
     _ = @import("12_mouse_test.zig");
+    _ = @import("13_gl_context_test.zig");
 }
