@@ -43,7 +43,7 @@ the commit hash in this heading when you do.
 
 **Manual / e2e** (this document; all UNPROVEN now):
 
-- [ ] §1 Window appearance & geometry (visual): title, position, HiDPI scale, fullscreen/borderless
+- [ ] §1 Window appearance, geometry & controls (visual): title, move (drag + `setPosition`), resize (drag + `setSize`), minimize/maximize/restore/raise, the WM min/max/close buttons, HiDPI scale, fullscreen/borderless
 - [ ] §2 Real OS event delivery: key / mouse / scroll / resize / focus / close / text-input / file-drop / gamepad
 - [ ] §3 Real key → action mapping
 - [ ] §4 OpenGL path: context / make-current / proc-address / swap / swap-interval / destroy
@@ -87,6 +87,13 @@ resizes the way a user perceives — those are below.
 | `Window.setSize` (tiling WM) | On a tiling WM (sway/i3), `win.setSize(...)`. | Request may be **clamped/ignored** by the WM — confirm no crash. *(On a floating WM the round-trip is asserted in the TDD suite.)* |
 | `Window.scaleFactor` (HiDPI) | Run on a HiDPI monitor (or a 2× scaled display); print `scaleFactor()`. Drag the window between a 1× and a 2× monitor. | Reports the monitor's real scale (e.g. `2.0`); updates when the window changes monitors if `capabilities().high_dpi_scale_per_monitor`. |
 | `Window.create` `fullscreen`/`borderless` | Create with `.fullscreen = true`, then separately `.borderless = true`. | Fullscreen covers the display; borderless has **no title bar/border**. |
+| WM control **buttons** present | Create a **bordered** window (`.borderless = false` — the default). | The OS title bar shows the **minimize, maximize, and close** buttons (plus the title). A `.borderless = true` window shows none of them. |
+| `Window.minimize` | `win.minimize();` (bind it to a key) **and** click the WM **minimize** button. | Window hides to the taskbar/dock **both ways**. *(No event or getter — visual only.)* Restoring from the taskbar brings it back. |
+| `Window.maximize` | `win.maximize();` **and** click the WM **maximize** button. | Window fills the work area (stays clear of panels/docks). *(No event/getter — visual.)* |
+| `Window.restore` | After a minimize or maximize, `win.restore();` (or click the maximize button again). | Window returns to its previous floating size + position. |
+| `Window.raise` | With the window behind others, `win.raise();`. | Window comes to the **front** and (where the WM permits) takes focus. |
+| Move by **dragging** | Drag the **title bar** to a new spot, then print `win.position()`. | Window follows the pointer; `position()` reflects the new spot on **X11/Windows** (no-op + meaningless on Wayland — see §7). Complements the programmatic `setPosition` row above. |
+| Resize by **dragging** | Drag a window **edge/corner** (needs `.resizable = true` — the default). | Window resizes live; a `.resize` event fires (see §2) and `win.size()` matches afterward. A `.resizable = false` window **cannot** be edge-resized. |
 
 ## 2. Real OS event delivery (needs human input / hardware)
 
