@@ -731,89 +731,35 @@ pub fn powerInfo() PowerInfo {
 }
 
 // =============================================================================
-// 2D rendering — Canvas  (since v0.9.0)
+// CPU / software framebuffer  (since v0.9.0)
 // =============================================================================
-// An optional `SDL_Renderer`-backed 2D draw path for the `.none` / HUD use
-// case. Renderer-agnostic consumers ignore it; it never pulls in a GPU API.
+// The `.cpu` renderer path: SDL hands the window a `SDL_Surface` you write
+// pixels into on the CPU (no GPU API). For windows created with
+// `renderer = .cpu`. Renderer-agnostic — drags in no graphics API.
 
-/// Straight 8-bit RGBA. *(since v0.9.0)*
-pub const Color = struct { r: u8, g: u8, b: u8, a: u8 = 255 };
-
-/// An axis-aligned rectangle, in pixels. *(since v0.9.0)*
-pub const Rect = struct { x: f32, y: f32, w: f32, h: f32 };
-
-/// A texture owned by a `Canvas`. *(since v0.9.0)*
-pub const Texture = opaque {
-    /// Free the texture. *(since v0.9.0)*
-    pub fn destroy(self: *Texture) void {
-        _ = self;
-        @panic("not implemented");
-    }
+/// A writable view of a `.cpu` window's backbuffer. `pixels` is `height * pitch`
+/// bytes; `pitch` (bytes per row) may exceed `width * 4` for alignment. Pixels
+/// are 8-bit BGRA (the SDL window-surface default). *(since v0.9.0)*
+pub const PixelBuffer = struct {
+    pixels: []u8,
+    width: u32,
+    height: u32,
+    pitch: u32,
 };
 
-/// A 2D draw surface bound to a window (`SDL_Renderer`). *(since v0.9.0)*
-pub const Canvas = opaque {
-    /// Create a 2D canvas for `window`. Caller owns it — release with `destroy`.
-    /// *(since v0.9.0)*
-    pub fn create(window: *Window) !*Canvas {
-        _ = window;
-        @panic("not implemented");
-    }
+/// Borrow the `.cpu` window's backbuffer to write pixels into. Valid until the
+/// next `presentPixels`; do not retain. *(since v0.9.0)*
+pub fn windowPixels(window: *Window) !PixelBuffer {
+    _ = window;
+    @panic("not implemented");
+}
 
-    /// Destroy the canvas. *(since v0.9.0)*
-    pub fn destroy(self: *Canvas) void {
-        _ = self;
-        @panic("not implemented");
-    }
-
-    /// Clear the whole target to `color`. *(since v0.9.0)*
-    pub fn clear(self: *Canvas, color: Color) void {
-        _ = self;
-        _ = color;
-        @panic("not implemented");
-    }
-
-    /// Fill `rect` with `color`. *(since v0.9.0)*
-    pub fn fillRect(self: *Canvas, rect: Rect, color: Color) void {
-        _ = self;
-        _ = rect;
-        _ = color;
-        @panic("not implemented");
-    }
-
-    /// Draw a line from (x1,y1) to (x2,y2) in `color`. *(since v0.9.0)*
-    pub fn drawLine(self: *Canvas, x1: f32, y1: f32, x2: f32, y2: f32, color: Color) void {
-        _ = self;
-        _ = x1;
-        _ = y1;
-        _ = x2;
-        _ = y2;
-        _ = color;
-        @panic("not implemented");
-    }
-
-    /// Blit `texture` into the `dst` rectangle. *(since v0.9.0)*
-    pub fn copy(self: *Canvas, texture: *Texture, dst: Rect) void {
-        _ = self;
-        _ = texture;
-        _ = dst;
-        @panic("not implemented");
-    }
-
-    /// Load an image file into a texture (owned against this canvas).
-    /// *(since v0.9.0)*
-    pub fn loadTexture(self: *Canvas, path: []const u8) !*Texture {
-        _ = self;
-        _ = path;
-        @panic("not implemented");
-    }
-
-    /// Present the accumulated draw commands. *(since v0.9.0)*
-    pub fn present(self: *Canvas) void {
-        _ = self;
-        @panic("not implemented");
-    }
-};
+/// Blit the written pixels to the screen (`SDL_UpdateWindowSurface`).
+/// *(since v0.9.0)*
+pub fn presentPixels(window: *Window) void {
+    _ = window;
+    @panic("not implemented");
+}
 
 // =============================================================================
 // Audio  (since v0.10.0)

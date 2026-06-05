@@ -25,6 +25,6 @@ test {
     _ = @import("15_text_input_test.zig");
     _ = @import("16_gamepad_test.zig");
     _ = @import("17_power_test.zig");
-    _ = @import("18_canvas_test.zig");
+    _ = @import("18_cpu_test.zig");
     _ = @import("19_audio_test.zig");
 }

@@ -21,18 +21,33 @@
 /// switch, not a mix (you cannot drive Vulkan and OpenGL into the same
 /// window). The choice decides which hand-off surface the library exposes:
 ///
-///  * `.vulkan` — per-OS native handle getters + `requiredVulkanInstanceExtensions()`.
-///  * `.opengl` — a managed GL context (`glCreateContext`/`glSwapWindow`/…).
-///  * `.none`   — window + events only; no GPU API touched (headless tools,
-///                custom 2D, and the platform-only decoupling check).
+/// In every GPU case the library hands back **raw OS primitives** and drags in
+/// no graphics API of its own (the decoupling invariant) — *you* drive the API:
+///
+///  * `.none`    — window + events only; no rendering surface.
+///  * `.vulkan`  — per-OS native handle getters + `requiredVulkanInstanceExtensions()`.
+///  * `.opengl`  — a managed GL context (`glCreateContext`/`glSwapWindow`/…).
+///  * `.cpu`     — a software framebuffer (`SDL_Surface`): write pixels on the CPU, no GPU.
+///  * `.metal`   — a `CAMetalLayer` (via `getCocoaHandle`); drive Metal. (macOS/iOS)
+///  * `.directx` — the `HWND` (via `getWin32Handle`); make the D3D11/12 device. (Windows)
 pub const Renderer = enum {
-    /// No GPU API. The window pumps events but exposes no rendering surface.
+    /// No rendering surface. The window pumps events only (headless tools,
+    /// the platform-only decoupling check).
     none,
-    /// Vulkan: the library hands back raw OS primitives for surface creation.
+    /// Vulkan: the library hands back raw OS primitives for surface creation;
+    /// you drive Vulkan.
     vulkan,
     /// OpenGL: the library manages the GL context; the GL loader lives in
     /// consumer code, fed by `glGetProcAddress`.
     opengl,
+    /// CPU / software framebuffer (`SDL_Surface`) — write pixels yourself, no GPU.
+    cpu,
+    /// Metal: the library hands back a `CAMetalLayer` (`getCocoaHandle`); you
+    /// drive Metal. macOS / iOS only.
+    metal,
+    /// Direct3D: the library hands back the `HWND` (`getWin32Handle`); you make
+    /// the D3D11/12 device + swapchain. Windows only.
+    directx,
 };
 
 /// A window/framebuffer size in **pixels**. Unsigned: a window is never

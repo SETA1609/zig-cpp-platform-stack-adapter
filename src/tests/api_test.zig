@@ -15,11 +15,14 @@ const platform = @import("platform");
 // Data / contract tests — active now
 // =============================================================================
 
-// WHEN reading Renderer's integer values · GIVEN the enum's wire contract · THEN none=0, vulkan=1, opengl=2.
+// WHEN reading Renderer's integer values · GIVEN the enum's wire contract · THEN none=0, vulkan=1, opengl=2, cpu=3, metal=4, directx=5 (new variants append; existing values are stable).
 test "enum values: Renderer" {
     try std.testing.expectEqual(@as(u8, 0), @intFromEnum(platform.Renderer.none));
     try std.testing.expectEqual(@as(u8, 1), @intFromEnum(platform.Renderer.vulkan));
     try std.testing.expectEqual(@as(u8, 2), @intFromEnum(platform.Renderer.opengl));
+    try std.testing.expectEqual(@as(u8, 3), @intFromEnum(platform.Renderer.cpu));
+    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(platform.Renderer.metal));
+    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(platform.Renderer.directx));
 }
 
 // WHEN reading MouseButton's integer values · GIVEN the enum's wire contract · THEN left=0, right=1, middle=2, x1=3, x2=4.
