@@ -21,4 +21,10 @@ test {
     _ = @import("11_window_state_test.zig");
     _ = @import("12_mouse_test.zig");
     _ = @import("13_gl_context_test.zig");
+    _ = @import("14_clipboard_test.zig");
+    _ = @import("15_text_input_test.zig");
+    _ = @import("16_gamepad_test.zig");
+    _ = @import("17_power_test.zig");
+    _ = @import("18_canvas_test.zig");
+    _ = @import("19_audio_test.zig");
 }
