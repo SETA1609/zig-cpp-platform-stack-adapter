@@ -1,6 +1,6 @@
 # zig-cpp-platform-stack-adapter
 
-A standalone **Zig library**: one stable, **renderer-agnostic** API for windowing, input, time, file paths, and per-OS native handles — backed by [SDL3](https://github.com/libsdl-org/SDL). Use it with **Vulkan**, **OpenGL**, or **headless**; the backend can change underneath without your code changing.
+A standalone **Zig library**: one stable, **renderer-agnostic** API for windowing, input, time, file paths, and per-OS native handles — backed by [SDL3](https://github.com/libsdl-org/SDL). Use it with **Vulkan**, **OpenGL**, a **CPU framebuffer**, **Metal**, **D3D**, or **headless**; the backend can change underneath without your code changing.
 
 **License:** [MIT](LICENSE) · **Requires:** Zig 0.16+ · **Status:** pre-1.0, single-maintainer
 
@@ -52,15 +52,18 @@ The public surface (see [`docs/mission.md`](docs/mission.md) for the full list):
 - Time, app data/cache paths, clipboard, IME, gamepad, sensor, haptic, power
 - Per-OS native handle getters + the prerequisites for Vulkan **or** OpenGL surface creation
 
-## Renderer-agnostic — Vulkan, OpenGL, or headless
+## Renderer-agnostic — Vulkan, OpenGL, CPU, Metal, D3D, or headless
 
-This library does windowing + input, **not** rendering, so it stays neutral about the GPU API. Three paths hang off the same window, chosen via `WindowOptions.renderer`:
+This library does windowing + input, **not** rendering, so it stays neutral about the GPU API. Six paths hang off the same window, chosen via `WindowOptions.renderer` — in every GPU case the library hands back **raw OS primitives** and links no graphics API:
 
 | Path | The library gives you | For |
 | --- | --- | --- |
+| **`.none`** | window + events only | headless tools |
 | **`.vulkan`** | per-OS native handle getters + `requiredVulkanInstanceExtensions()` (raw primitives, no Vulkan types) | your Vulkan renderer / a Vulkan-stack adapter |
 | **`.opengl`** | a managed GL context + `glSwapWindow` + `glGetProcAddress` + swap-interval | any OpenGL renderer (the GL loader lives in your code) |
-| **`.none`** | window + events only | headless tools, custom 2D |
+| **`.cpu`** | a software framebuffer (`SDL_GetWindowSurface`; write BGRA pixels on CPU) | software rasterizers, 2D, custom blitters |
+| **`.metal`** | a `CAMetalLayer` via `getCocoaHandle` (raw primitive) | your Metal renderer (macOS / iOS) |
+| **`.directx`** | the `HWND` via `getWin32Handle` (raw primitive) | your D3D11 / D3D12 device (Windows) |
 
 You are **not** forced onto Vulkan. The OpenGL path is fully supported, and it lets you migrate a renderer **from OpenGL to Vulkan in stages** — keep GL shipping while you build the Vulkan path against the same windowing API, then flip. (Honest limit: a window binds to one GPU API at creation; this is for *switching* renderers, not mixing GL + Vulkan in one window.)
 
@@ -89,7 +92,7 @@ defer platform.deinit();
 const window = try platform.Window.create(.{
     .title = "my app",
     .size = .{ .w = 1280, .h = 720 },
-    .renderer = .vulkan,   // or .opengl, or .none
+    .renderer = .vulkan,   // or .opengl / .cpu / .metal / .directx / .none
 });
 defer window.destroy();
 
@@ -108,10 +111,14 @@ while (!window.shouldClose()) {
 
 ## Backends
 
+The **backend** (the windowing implementation) is a separate axis from the per-window **renderer** above. The public API is identical across backends.
+
 | Backend | Status |
 | --- | --- |
-| **SDL3** (zlib) — via [`castholm/SDL`](https://github.com/castholm/SDL), pinned in `build.zig.zon` | active, default |
-| Pure-Zig native (X11/Wayland/Win32/Android) | **not maintainer-led** — a solid, tested PR is welcome; the `backend/native/` slot exists for it. See [CONTRIBUTING](CONTRIBUTING.md). |
+| **SDL3** (zlib) — via [`castholm/SDL`](https://github.com/castholm/SDL), pinned in `build.zig.zon` | active, default — the backend through **v1.0.0** (all SDL3-backed features implemented & frozen) |
+| Native per-OS backends (X11 / Wayland / Win32 / Android NDK / Cocoa) | **planned post-1.0** (the v1.x line) — same public API, no SDL3. Contributor PRs welcome; the `backend/native/` slot exists for it. See [CONTRIBUTING](CONTRIBUTING.md). |
+
+> **macOS is contributor-led:** SDL3 covers macOS, but the author has no macOS hardware to test on, so anything macOS-specific (the `.metal` hand-off, a native Cocoa backend) ships only via a self-tested contributor PR.
 
 ## Design rules (what keeps a backend swap cheap)
 

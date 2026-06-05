@@ -26,7 +26,10 @@
   "Renderer": {
     "none": 0,
     "vulkan": 1,
-    "opengl": 2
+    "opengl": 2,
+    "cpu": 3,
+    "metal": 4,
+    "directx": 5
   },
   "MouseButton": {
     "left": 0,

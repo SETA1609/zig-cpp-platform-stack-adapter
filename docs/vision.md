@@ -6,15 +6,18 @@
 
 A consumer imports `platform` and never sees a backend. The backend is **SDL3** today; it could be a native Zig backend or a future SDL tomorrow. When it changes, **consumer source changes nowhere** — that is the reason this exists as a separate, versioned library.
 
-## Renderer-agnostic — serve Vulkan *and* OpenGL *and* headless
+## Renderer-agnostic — serve Vulkan *and* OpenGL *and* CPU *and* Metal *and* D3D *and* headless
 
-This library does **windowing + input + OS services**, not rendering. It therefore stays neutral about *which* GPU API the consumer draws with. Three independent paths hang off the same window:
+This library does **windowing + input + OS services**, not rendering. It therefore stays neutral about *which* GPU API the consumer draws with. Independent paths hang off the same window, chosen via `WindowOptions.renderer` — in every GPU case the library provides **raw OS primitives** and drags no graphics API:
 
 | Path | What the library provides | Consumer |
 | --- | --- | --- |
+| **none** | window + events only | headless tools |
 | **Vulkan** | per-OS native handle getters + `requiredVulkanInstanceExtensions()` — raw primitives, no Vulkan types | any Vulkan renderer (e.g. the companion [vulkan-stack adapter](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)) |
 | **OpenGL** | a managed GL context + `glSwapWindow` + `glGetProcAddress` + swap-interval | any GL renderer (loader lives in the consumer) |
-| **headless / 2D** | window + events only | tools, custom 2D |
+| **CPU** | a software framebuffer (`SDL_GetWindowSurface`; BGRA pixels written on CPU) | software rasterizers, 2D, custom blitters |
+| **Metal** | a `CAMetalLayer` via `getCocoaHandle` (raw primitive) | any Metal renderer (macOS / iOS) |
+| **D3D** | the `HWND` via `getWin32Handle` (raw primitive) | any D3D11 / D3D12 device (Windows) |
 
 **Why this matters concretely:** consumers are **not** forced onto Vulkan, and a renderer can be migrated **from OpenGL to Vulkan in stages** without first rewriting its windowing/input layer. Keep the GL renderer shipping while a Vulkan renderer is built against the *same* platform API, then flip when it reaches parity. The platform layer is the stable floor under that migration. (Honest limit: a single window binds to one GPU API at creation; this enables *switching* renderers in stages, not mixing GL and Vulkan in one window.)
 

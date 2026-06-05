@@ -54,10 +54,12 @@ Size: **L** · several sessions. Quick wins first.
       connect/disconnect lifecycle (events already exist).
 - [ ] Sensor (gyro/IMU), haptic, power info (`SDL_GetPowerInfo`).
 
-## Phase P4 — v0.9 (2D renderer)
+## Phase P4 — v0.9 (CPU framebuffer)
 
-Size: **M** · `SDL_Renderer` primitives (clear / rect / line / texture) behind a
-clean Zig API for the `.none` / HUD path.
+Size: **M** · the `.cpu` software-framebuffer path (`SDL_GetWindowSurface`; write
+BGRA pixels on CPU) behind a clean Zig API — covers 2D / HUD / software
+rasterizers without dragging a GPU API. (The SDL_Renderer-based 2D `Canvas` was
+dropped: 2D is served by `.cpu` or the GPU renderer paths.)
 
 ## Phase P5 — v0.10 (audio)
 
@@ -70,14 +72,17 @@ Size: **M–L** · infra + cross-platform.
 
 - [ ] Validate **Win32 / Android** native-handle getters on their own OSes (they
       return `null` on Linux today, unproven elsewhere).
-- [ ] **macOS (in scope, contributor-led — not maintainer-tested, see
-      [`CONTRIBUTING.md`](../CONTRIBUTING.md)):** `getCocoaHandle` →
-      `CAMetalLayer`, pairing with the vulkan lib's `createMetalSurface`.
+- [ ] **macOS (in scope, contributor-led — the author has no macOS hardware to
+      test on, so it ships only via a self-tested contributor PR; see
+      [`CONTRIBUTING.md`](../CONTRIBUTING.md)):** the `.metal` hand-off —
+      `getCocoaHandle` → `CAMetalLayer`, pairing with the vulkan lib's
+      `createMetalSurface`. SDL3 itself covers macOS.
 - [ ] **CI matrix**: Linux X11 + Wayland (headless compositor for the
       window/event suite), Windows, Android build.
 - [ ] Wire the **platform-only `nm` gate** (zero `vk*` symbols) as a hard CI gate;
       complete capability-flag divergence docs; pin `castholm/SDL` to a released
-      tag; **freeze the API** → tag **v1.0.0**.
+      tag; **freeze the API** → tag **v1.0.0** (all SDL3-backed features
+      implemented & frozen).
 
 ## Critical path
 
@@ -87,5 +92,7 @@ that real games need, and clear most of the skipped suite.
 
 ## Out of scope for 1.0
 
-Multi-window (single primary window for 1.0) · a pure-Zig native backend
-(contributor-led, `backend/native/` slot retained) — see [`ROADMAP.md`](ROADMAP.md).
+Multi-window (single primary window for 1.0) · the **native per-OS backends**
+(X11 / Wayland / Win32 / Android NDK / Cocoa) — **planned post-1.0** (the v1.x
+line), same public API with no SDL3; contributor-led, `backend/native/` slot
+retained — see [`ROADMAP.md`](ROADMAP.md).

@@ -107,7 +107,7 @@ ladder steps are implemented** — later steps assume the earlier ones work.
 ## Out of scope
 
 - Rendering, or GL/Vulkan *bindings* / draw-call wrappers — the library provides the prerequisites, not the drawing.
-- Leaking backend idioms into the public API (no `SDL_*` / `GLFW*` types across the boundary — design Rule 1).
+- Leaking backend idioms into the public API (no `SDL_*` — or any backend — types across the boundary — design Rule 1).
 - Making the windowing and any renderer library share a type — they stay fully decoupled (design Rule 2).
 
 ## The four design rules a PR must uphold

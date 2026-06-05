@@ -42,7 +42,16 @@ pub fn deinit() void;                    // shut the backend down
 ## Window  *(since v0.6.0)*
 
 ```zig
-pub const Renderer = enum { none, vulkan, opengl };   // GPU API bound at creation
+// GPU API bound at creation (wire ints: none=0, vulkan=1, opengl=2, cpu=3, metal=4, directx=5).
+// In every GPU case the library hands back RAW OS primitives and links no graphics API.
+pub const Renderer = enum {
+    none,      // window + events only
+    vulkan,    // native handle getters → you drive Vulkan
+    opengl,    // managed GL context
+    cpu,       // software framebuffer (SDL_GetWindowSurface; write BGRA pixels on CPU)
+    metal,     // CAMetalLayer via getCocoaHandle → you drive Metal (macOS/iOS)
+    directx,   // HWND via getWin32Handle → you make the D3D11/12 device (Windows)
+};
 pub const Size = struct { w: u32, h: u32 };
 pub const Position = struct { x: i32, y: i32 };
 

@@ -1,6 +1,6 @@
 # Milestone v0.6.0 — SDL3 minimal backend
 
-> The plan to reach the first usable release. Replaces the GLFW hello-world template with an SDL3 backend: a window, an event pump, renderer selection (Vulkan/OpenGL/none), per-OS native handle getters, and minimal action binding. Roadmap context: [`ROADMAP.md`](ROADMAP.md).
+> The plan to reach the first usable release. Builds the SDL3 backend: a window, an event pump, renderer selection, per-OS native handle getters, and minimal action binding. Roadmap context: [`ROADMAP.md`](ROADMAP.md).
 >
 > **Goal:** tag `v0.6.0`.
 >
@@ -58,5 +58,6 @@ Each `[ ]` is one atomic commit (Conventional Commits, subject ≤ 72 chars).
 
 - v0.7.0 — full action input (contexts, injection, axis modifiers, TOML-loaded bindings)
 - v0.8.0 — gamepad / sensor / haptic / clipboard / paths / power / IME
-- v0.9.0 — `SDL_Renderer` 2D primitives
+- v0.9.0 — remaining renderer paths: `.cpu` software framebuffer + `.metal`/`.directx` native hand-offs
 - v0.10.0 — `SDL_AudioStream` default audio
+- v1.0.0 — all SDL3-backed features frozen · post-1.0 (v1.x) — native per-OS backends

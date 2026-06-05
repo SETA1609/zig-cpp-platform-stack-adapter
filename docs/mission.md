@@ -6,9 +6,10 @@
 
 1. **A stable Zig API shaped to the consumer's needs, not SDL3's idioms** — `Window`, an `Event` union, action-mapped input, time, file paths, native handles. No `SDL_*` type crosses the boundary.
 
-2. **Renderer chosen at window creation.** SDL binds a window to one GPU API (`SDL_WINDOW_VULKAN` vs `SDL_WINDOW_OPENGL`) at creation, so the choice is a `WindowOptions` field:
+2. **Renderer chosen at window creation.** The window binds to one GPU API at creation, so the choice is a `WindowOptions` field. In every GPU case the library hands back raw OS primitives and links no graphics API:
    ```zig
-   pub const Renderer = enum { none, vulkan, opengl };
+   pub const Renderer = enum { none, vulkan, opengl, cpu, metal, directx };
+   // wire ints: none=0, vulkan=1, opengl=2, cpu=3, metal=4, directx=5
    // WindowOptions.renderer: Renderer = .vulkan
    ```
 
