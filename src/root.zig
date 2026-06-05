@@ -277,6 +277,27 @@ pub const Window = opaque {
     pub fn mouseGrabbed(self: *Window) bool {
         return backend.windowMouseGrabbed(self.state());
     }
+
+    // -- Text input / IME  (since v0.8.0) — stubs until v0.8.0 lands --
+
+    /// Begin IME text composition for this window — `text_input` events start
+    /// arriving from the pump. *(since v0.8.0)*
+    pub fn startTextInput(self: *Window) void {
+        _ = self;
+        @panic("not implemented");
+    }
+
+    /// Stop IME text composition for this window. *(since v0.8.0)*
+    pub fn stopTextInput(self: *Window) void {
+        _ = self;
+        @panic("not implemented");
+    }
+
+    /// `true` while IME text input is active for this window. *(since v0.8.0)*
+    pub fn textInputActive(self: *Window) bool {
+        _ = self;
+        @panic("not implemented");
+    }
 };
 
 // =============================================================================
@@ -594,3 +615,274 @@ pub fn glDestroyContext(context: *GlContext) void {
 pub fn capabilities() Capabilities {
     @panic("not implemented");
 }
+
+// =============================================================================
+// Clipboard  (since v0.8.0)
+// =============================================================================
+
+/// The clipboard's UTF-8 text, owned by the caller (`allocator.free` it); an
+/// empty string when the clipboard holds no text. *(since v0.8.0)*
+pub fn getClipboardText(allocator: std.mem.Allocator) ![]u8 {
+    _ = allocator;
+    @panic("not implemented");
+}
+
+/// Set the clipboard's UTF-8 text. *(since v0.8.0)*
+pub fn setClipboardText(text: []const u8) !void {
+    _ = text;
+    @panic("not implemented");
+}
+
+// =============================================================================
+// Gamepads  (since v0.8.0)
+// =============================================================================
+// Connect/disconnect arrive as `gamepad` events from the pump; open a device by
+// its instance id to read state, rumble (haptic), and its IMU sensors.
+
+/// The instance ids of the currently-connected gamepads, owned by the caller.
+/// *(since v0.8.0)*
+pub fn connectedGamepads(allocator: std.mem.Allocator) ![]u32 {
+    _ = allocator;
+    @panic("not implemented");
+}
+
+/// Open a gamepad by instance id (from a `gamepad` connect event or
+/// `connectedGamepads`). Caller owns it — release with `close`. *(since v0.8.0)*
+pub fn openGamepad(instance_id: u32) !*Gamepad {
+    _ = instance_id;
+    @panic("not implemented");
+}
+
+/// An opened gamepad device. *(since v0.8.0)*
+pub const Gamepad = opaque {
+    /// Close the device. *(since v0.8.0)*
+    pub fn close(self: *Gamepad) void {
+        _ = self;
+        @panic("not implemented");
+    }
+
+    /// The device's display name. *(since v0.8.0)*
+    pub fn name(self: *Gamepad) []const u8 {
+        _ = self;
+        @panic("not implemented");
+    }
+
+    /// **Rumble / haptic.** Run the low- and high-frequency motors at `0..=1`
+    /// intensities for `duration_ms`. *(since v0.8.0)*
+    pub fn rumble(self: *Gamepad, low_frequency: f32, high_frequency: f32, duration_ms: u32) !void {
+        _ = self;
+        _ = low_frequency;
+        _ = high_frequency;
+        _ = duration_ms;
+        @panic("not implemented");
+    }
+
+    /// **Haptic — triggers.** Run the left/right trigger motors (`0..=1`) for
+    /// `duration_ms`; not all pads have these. *(since v0.8.0)*
+    pub fn rumbleTriggers(self: *Gamepad, left: f32, right: f32, duration_ms: u32) !void {
+        _ = self;
+        _ = left;
+        _ = right;
+        _ = duration_ms;
+        @panic("not implemented");
+    }
+
+    /// **Sensor.** Enable/disable the pad's gyro + accelerometer (off by default
+    /// to save power). *(since v0.8.0)*
+    pub fn setSensorEnabled(self: *Gamepad, on: bool) !void {
+        _ = self;
+        _ = on;
+        @panic("not implemented");
+    }
+
+    /// **Sensor.** Latest gyroscope reading (rad/s; x/y/z). Needs
+    /// `setSensorEnabled(true)`. *(since v0.8.0)*
+    pub fn gyroscope(self: *Gamepad) [3]f32 {
+        _ = self;
+        @panic("not implemented");
+    }
+
+    /// **Sensor.** Latest accelerometer reading (m/s²; x/y/z). Needs
+    /// `setSensorEnabled(true)`. *(since v0.8.0)*
+    pub fn accelerometer(self: *Gamepad) [3]f32 {
+        _ = self;
+        @panic("not implemented");
+    }
+};
+
+// =============================================================================
+// Power  (since v0.8.0)
+// =============================================================================
+
+/// System power source / battery state. *(since v0.8.0)*
+pub const PowerState = enum { unknown, on_battery, no_battery, charging, charged };
+
+/// A power snapshot. `seconds` / `percent` are `null` when the platform can't
+/// report them. *(since v0.8.0)*
+pub const PowerInfo = struct {
+    state: PowerState,
+    seconds: ?u32,
+    percent: ?u8,
+};
+
+/// Query the current power / battery status. *(since v0.8.0)*
+pub fn powerInfo() PowerInfo {
+    @panic("not implemented");
+}
+
+// =============================================================================
+// 2D rendering — Canvas  (since v0.9.0)
+// =============================================================================
+// An optional `SDL_Renderer`-backed 2D draw path for the `.none` / HUD use
+// case. Renderer-agnostic consumers ignore it; it never pulls in a GPU API.
+
+/// Straight 8-bit RGBA. *(since v0.9.0)*
+pub const Color = struct { r: u8, g: u8, b: u8, a: u8 = 255 };
+
+/// An axis-aligned rectangle, in pixels. *(since v0.9.0)*
+pub const Rect = struct { x: f32, y: f32, w: f32, h: f32 };
+
+/// A texture owned by a `Canvas`. *(since v0.9.0)*
+pub const Texture = opaque {
+    /// Free the texture. *(since v0.9.0)*
+    pub fn destroy(self: *Texture) void {
+        _ = self;
+        @panic("not implemented");
+    }
+};
+
+/// A 2D draw surface bound to a window (`SDL_Renderer`). *(since v0.9.0)*
+pub const Canvas = opaque {
+    /// Create a 2D canvas for `window`. Caller owns it — release with `destroy`.
+    /// *(since v0.9.0)*
+    pub fn create(window: *Window) !*Canvas {
+        _ = window;
+        @panic("not implemented");
+    }
+
+    /// Destroy the canvas. *(since v0.9.0)*
+    pub fn destroy(self: *Canvas) void {
+        _ = self;
+        @panic("not implemented");
+    }
+
+    /// Clear the whole target to `color`. *(since v0.9.0)*
+    pub fn clear(self: *Canvas, color: Color) void {
+        _ = self;
+        _ = color;
+        @panic("not implemented");
+    }
+
+    /// Fill `rect` with `color`. *(since v0.9.0)*
+    pub fn fillRect(self: *Canvas, rect: Rect, color: Color) void {
+        _ = self;
+        _ = rect;
+        _ = color;
+        @panic("not implemented");
+    }
+
+    /// Draw a line from (x1,y1) to (x2,y2) in `color`. *(since v0.9.0)*
+    pub fn drawLine(self: *Canvas, x1: f32, y1: f32, x2: f32, y2: f32, color: Color) void {
+        _ = self;
+        _ = x1;
+        _ = y1;
+        _ = x2;
+        _ = y2;
+        _ = color;
+        @panic("not implemented");
+    }
+
+    /// Blit `texture` into the `dst` rectangle. *(since v0.9.0)*
+    pub fn copy(self: *Canvas, texture: *Texture, dst: Rect) void {
+        _ = self;
+        _ = texture;
+        _ = dst;
+        @panic("not implemented");
+    }
+
+    /// Load an image file into a texture (owned against this canvas).
+    /// *(since v0.9.0)*
+    pub fn loadTexture(self: *Canvas, path: []const u8) !*Texture {
+        _ = self;
+        _ = path;
+        @panic("not implemented");
+    }
+
+    /// Present the accumulated draw commands. *(since v0.9.0)*
+    pub fn present(self: *Canvas) void {
+        _ = self;
+        @panic("not implemented");
+    }
+};
+
+// =============================================================================
+// Audio  (since v0.10.0)
+// =============================================================================
+// A minimal `SDL_AudioStream` path: open a device, queue PCM, load WAV — enough
+// for sound effects without a separate audio library.
+
+/// PCM sample format. *(since v0.10.0)*
+pub const AudioFormat = enum { uint8, int16, int32, float32 };
+
+/// The shape of a PCM stream. *(since v0.10.0)*
+pub const AudioSpec = struct {
+    frequency: u32 = 48_000,
+    channels: u8 = 2,
+    format: AudioFormat = .float32,
+};
+
+/// Decoded WAV data, owned by the caller (`freeWav`). *(since v0.10.0)*
+pub const Wav = struct {
+    spec: AudioSpec,
+    pcm: []u8,
+};
+
+/// Open the default audio device for output with `spec`. Caller owns the stream
+/// — release with `destroy`. *(since v0.10.0)*
+pub fn openAudioStream(spec: AudioSpec) !*AudioStream {
+    _ = spec;
+    @panic("not implemented");
+}
+
+/// Load a `.wav` file into memory. Free with `freeWav`. *(since v0.10.0)*
+pub fn loadWav(allocator: std.mem.Allocator, path: []const u8) !Wav {
+    _ = allocator;
+    _ = path;
+    @panic("not implemented");
+}
+
+/// Free WAV data returned by `loadWav`. *(since v0.10.0)*
+pub fn freeWav(allocator: std.mem.Allocator, wav: Wav) void {
+    _ = allocator;
+    _ = wav;
+    @panic("not implemented");
+}
+
+/// A queued audio output stream. *(since v0.10.0)*
+pub const AudioStream = opaque {
+    /// Queue PCM bytes for playback (matching the stream's `AudioSpec`).
+    /// *(since v0.10.0)*
+    pub fn queue(self: *AudioStream, pcm: []const u8) !void {
+        _ = self;
+        _ = pcm;
+        @panic("not implemented");
+    }
+
+    /// Bytes still queued (not yet played). *(since v0.10.0)*
+    pub fn queued(self: *AudioStream) usize {
+        _ = self;
+        @panic("not implemented");
+    }
+
+    /// Drop all queued audio. *(since v0.10.0)*
+    pub fn clear(self: *AudioStream) void {
+        _ = self;
+        @panic("not implemented");
+    }
+
+    /// Close the stream and its device. *(since v0.10.0)*
+    pub fn destroy(self: *AudioStream) void {
+        _ = self;
+        @panic("not implemented");
+    }
+};
