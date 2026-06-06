@@ -11,12 +11,12 @@ const h = @import("harness.zig");
 const gate = h.gate;
 
 const done = .{
-    .glCreateContext = false,
-    .glMakeCurrent = false,
-    .glSwapWindow = false,
-    .glSetSwapInterval = false,
-    .glGetProcAddress = false,
-    .glDestroyContext = false,
+    .glCreateContext = true,
+    .glMakeCurrent = true,
+    .glSwapWindow = true,
+    .glSetSwapInterval = true,
+    .glGetProcAddress = true,
+    .glDestroyContext = true,
 };
 
 /// A window created on the OpenGL renderer path — the precondition for every
@@ -98,18 +98,11 @@ test "glGetProcAddress: resolves a core GL symbol" {
     try std.testing.expect(platform.glGetProcAddress("glClear") != null);
 }
 
-// WHEN resolving a bogus symbol ("glNotARealFunction") · GIVEN a current GL context · THEN null is returned.
-test "glGetProcAddress: an unknown symbol resolves to null" {
-    try gate(done.glCreateContext and done.glMakeCurrent and done.glGetProcAddress);
-    try h.startup();
-    defer platform.deinit();
-    const window = try glWindow();
-    defer window.destroy();
-    const ctx = try platform.glCreateContext(window);
-    defer platform.glDestroyContext(ctx);
-    try platform.glMakeCurrent(window, ctx);
-    try std.testing.expect(platform.glGetProcAddress("glNotARealFunction") == null);
-}
+// NOTE: there is intentionally no "unknown name → null" test. `SDL_GL_GetProcAddress`
+// rides `glXGetProcAddressARB` / `eglGetProcAddress`, which return a **non-null
+// trampoline for any name** — a non-null result does NOT prove the function
+// exists. Validate availability via the GL version/extension string, not the
+// pointer. (This is why `glGetProcAddress`'s doc warns about it.)
 
 // --- glDestroyContext ------------------------------------------------------
 

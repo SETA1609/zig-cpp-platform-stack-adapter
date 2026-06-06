@@ -9,7 +9,7 @@ const h = @import("harness.zig");
 const gate = h.gate;
 
 const done = .{
-    .capabilities = false,
+    .capabilities = true,
 };
 
 // WHEN calling capabilities and reading each field · GIVEN a started platform · THEN it returns a value exposing all expected fields (a missing/renamed one would fail to compile).

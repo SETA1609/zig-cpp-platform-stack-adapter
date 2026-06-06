@@ -570,40 +570,37 @@ pub const GlContext = opaque {};
 /// Create a GL context for `window` (which must have been created with
 /// `renderer = .opengl`). Caller owns it — release with `glDestroyContext`.
 pub fn glCreateContext(window: *Window) !*GlContext {
-    _ = window;
-    @panic("not implemented");
+    const ctx = backend.glCreateContext(window.state()) orelse return error.GlContextCreationFailed;
+    return @ptrCast(ctx);
 }
 
 /// Make `context` current on `window` for the calling thread.
 pub fn glMakeCurrent(window: *Window, context: *GlContext) !void {
-    _ = window;
-    _ = context;
-    @panic("not implemented");
+    if (!backend.glMakeCurrent(window.state(), context)) return error.GlMakeCurrentFailed;
 }
 
 /// Present the back buffer (swap buffers) for an OpenGL window.
 pub fn glSwapWindow(window: *Window) void {
-    _ = window;
-    @panic("not implemented");
+    backend.glSwapWindow(window.state());
 }
 
 /// Set the swap interval: `0` = off, `1` = vsync, `-1` = adaptive vsync.
 pub fn glSetSwapInterval(interval: i32) void {
-    _ = interval;
-    @panic("not implemented");
+    backend.glSetSwapInterval(interval);
 }
 
-/// Look up the address of a GL function by name for your loader. Returns
-/// `null` if the symbol is unavailable.
+/// Look up the address of a GL function by name for your loader (over
+/// `SDL_GL_GetProcAddress`). **Caveat:** on GLX/EGL the underlying loader
+/// returns a non-null trampoline for *any* name, so a non-null result does
+/// **not** prove the function exists — gate real availability on the GL
+/// version / extension string. `null` means the loader has no entry point at all.
 pub fn glGetProcAddress(name: [*:0]const u8) ?*const anyopaque {
-    _ = name;
-    @panic("not implemented");
+    return backend.glGetProcAddress(name);
 }
 
 /// Destroy a GL context created by `glCreateContext`.
 pub fn glDestroyContext(context: *GlContext) void {
-    _ = context;
-    @panic("not implemented");
+    backend.glDestroyContext(context);
 }
 
 // =============================================================================
@@ -613,7 +610,7 @@ pub fn glDestroyContext(context: *GlContext) void {
 /// Query honest per-OS / per-display-server capabilities instead of assuming
 /// a feature works everywhere. See `Capabilities`. *(since v0.7.0)*
 pub fn capabilities() Capabilities {
-    @panic("not implemented");
+    return backend.capabilities();
 }
 
 // =============================================================================

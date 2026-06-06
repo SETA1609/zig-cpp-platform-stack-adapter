@@ -319,6 +319,56 @@ pub fn windowAndroidHandle(ws: *WindowState) ?AndroidHandle {
     return .{ .window = w };
 }
 
+// -- OpenGL context (ladder step 13) -----------------------------------------
+// Thin wrappers over SDL3's `SDL_GL_*`. The SDL `SDL_GLContext` is handed back
+// to root.zig as an opaque pointer (root casts it to `*GlContext`); the GL
+// loader itself lives in the consumer, fed by `glGetProcAddress`.
+
+pub fn glCreateContext(ws: *WindowState) ?*anyopaque {
+    return @ptrCast(c.SDL_GL_CreateContext(ws.sdl) orelse return null);
+}
+
+pub fn glMakeCurrent(ws: *WindowState, context: *anyopaque) bool {
+    return c.SDL_GL_MakeCurrent(ws.sdl, @ptrCast(context));
+}
+
+pub fn glSwapWindow(ws: *WindowState) void {
+    _ = c.SDL_GL_SwapWindow(ws.sdl);
+}
+
+pub fn glSetSwapInterval(interval: i32) void {
+    _ = c.SDL_GL_SetSwapInterval(@intCast(interval));
+}
+
+pub fn glGetProcAddress(name: [*:0]const u8) ?*const anyopaque {
+    return @ptrCast(c.SDL_GL_GetProcAddress(name));
+}
+
+pub fn glDestroyContext(context: *anyopaque) void {
+    _ = c.SDL_GL_DestroyContext(@ptrCast(context));
+}
+
+// -- Capabilities (ladder step 9) --------------------------------------------
+// Honest per-display-server flags. The split that matters is Wayland, which
+// forbids a client from setting or reading its own absolute window position.
+
+pub fn capabilities() common.Capabilities {
+    const drv = c.SDL_GetCurrentVideoDriver();
+    var is_wayland = false;
+    if (drv != null) {
+        const name: [*:0]const u8 = @ptrCast(drv);
+        is_wayland = std.mem.eql(u8, std.mem.span(name), "wayland");
+    }
+    return .{
+        .can_set_window_position = !is_wayland,
+        .can_query_window_position = !is_wayland,
+        // Global (desktop-wide) capture is restricted under Wayland's security model.
+        .can_capture_global_input = !is_wayland,
+        // SDL reports a per-display scale (`SDL_GetWindowDisplayScale`).
+        .high_dpi_scale_per_monitor = true,
+    };
+}
+
 /// The Vulkan instance extensions SDL needs to present to its windows. Ensures
 /// the Vulkan loader is available first (idempotent; a `.vulkan` window already
 /// loaded it). The returned slice is owned by SDL — do not free.
