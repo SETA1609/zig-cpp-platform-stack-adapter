@@ -33,6 +33,9 @@ jobs:
   build:
     name: build · ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # macOS is contributor-led (the author has no mac hardware): visible but
+    # non-blocking, so a mac-only break never gates a merge.
+    continue-on-error: ${{ matrix.os == 'macos-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -50,6 +53,27 @@ jobs:
 
       # fmt + build + smoke demo + contract tests. `.gitattributes` (eol=lf)
       # keeps the Windows checkout LF so the fmt gate passes there too. The
-      # behavioral test-tdd suite needs a real display and is off-CI.
+      # behavioral test-tdd suite needs a display + GL — it runs in the
+      # display-tests job below (Xvfb + Mesa software GL).
       - name: CI checks
         run: bash scripts/ci.sh
+
+  # Headless display coverage: the behavioral test-tdd suite under Xvfb + Mesa
+  # llvmpipe (software GL). It needs a display (window creation) and GL (the v0.6
+  # GL-context tests). Software GL is reliable, so this GATES.
+  display-tests:
+    name: test-tdd (xvfb + software GL)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+          use-cache: true
+      - name: Install Xvfb + Mesa software GL
+        run: sudo apt-get update && sudo apt-get install -y xvfb mesa-utils libgl1-mesa-dri libglx-mesa0
+      - name: test-tdd under Xvfb (llvmpipe)
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: xvfb-run -a zig build test-tdd
