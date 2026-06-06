@@ -13,10 +13,11 @@
 
 ## Coverage status — as of `1a05064`
 
-What is **proven today**. The v0.6.0 core and the v0.7.0 window-state /
-mouse-capture / cursor calls are implemented on the SDL3 backend; the OpenGL
-path, input contexts, `capabilities()`, and the filesystem paths are still
-`@panic("not implemented")` stubs, so those behaviors remain unproven. The
+What is **proven today**. The full v0.6.0 surface (core + the OpenGL context
+path + `capabilities()`) and the v0.7.0 window-state / mouse-capture / cursor
+calls are implemented on the SDL3 backend; input contexts and the filesystem
+paths are still `@panic("not implemented")` stubs, so those behaviors remain
+unproven. The
 in-process invariants are exercised by the gated TDD suite; the rows below stay
 unchecked until each is confirmed against a real desktop session. Re-tick each
 box as its backend lands and the matching TDD test / e2e procedure passes; bump
@@ -26,7 +27,7 @@ the commit hash in this heading when you do.
 
 - [x] Enum numeric values, struct defaults, type layout (`src/tests/api_test.zig`)
 
-**Automated — `zig build test-tdd`** (red→green; sessions `01`–`07`, `11`, `12` are green, the unimplemented sessions `08`, `09`, `10`, `13` are still RED/gated):
+**Automated — `zig build test-tdd`** (red→green; sessions `01`–`07`, `09`, `11`, `12`, `13` are green — run `13` (OpenGL) and `09` (capabilities) **with a display**; sessions `08`, `10` are still RED/gated):
 
 - [ ] Lifecycle: `init` / `deinit`
 - [ ] Window: `create` / `destroy` / `size` / `shouldClose` / `scaleFactor` / `setSize`

@@ -14,21 +14,25 @@
 minimize/maximize/restore/raise) · **mouse capture & cursor** (relative mode,
 grab, warp, show/hide/visible) · event pump (`nextEvent`/`pollAllEvents`/`events`)
 · key action binding (`bindAction`/`actionPressed`/`actionJust*`) · **X11 +
-Wayland** native handles + `requiredVulkanInstanceExtensions` · time.
+Wayland** native handles + `requiredVulkanInstanceExtensions` · time · **OpenGL
+context path** (`glCreateContext`/…/`glDestroyContext`) · **`capabilities()`**.
+**v0.6.0 is feature-complete.**
 
-🚧 **14 public functions still `@panic`** (5 input-context, 3 filesystem-path,
-6 OpenGL), plus `capabilities()`. Mapped to milestones below.
+🚧 **8 public functions still `@panic`** (5 input-context, 3 filesystem-path).
+Mapped to milestones below. *(The v0.8–v0.10 device/IO/cpu/audio surfaces are
+scaffolded-but-stubbed too — see ROADMAP.)*
 
-## Phase P1 — finish v0.6 (GL path + capabilities)
+## Phase P1 — finish v0.6 (GL path + capabilities) — ✅ DONE
 
 Size: **S–M** · CI: Linux-runnable (needs a display + a GL context).
 
-- [ ] New `13_gl_context_test.zig` session: implement `glCreateContext` /
-      `glMakeCurrent` / `glSwapWindow` / `glSetSwapInterval` / `glGetProcAddress`
-      / `glDestroyContext` via `SDL_GL_*` on an `.opengl` window. (Makes the
-      advertised OpenGL renderer real.)
-- [ ] Implement `capabilities()` (currently `@panic`) — turns the 3 gated
-      `09_capabilities` tests green. 1.0 requires "capability flags complete."
+- [x] `13_gl_context_test.zig`: `glCreateContext` / `glMakeCurrent` /
+      `glSwapWindow` / `glSetSwapInterval` / `glGetProcAddress` /
+      `glDestroyContext` via `SDL_GL_*` on an `.opengl` window — implemented; the
+      OpenGL renderer path is real. *(No "unknown name → null" assertion: GLX/EGL
+      return a non-null trampoline for any name — validate via the GL version.)*
+- [x] `capabilities()` implemented (`SDL_GetCurrentVideoDriver`; Wayland forbids
+      self-position) — the `09_capabilities` tests pass.
 
 ## Phase P2 — finish v0.7 (input depth)
 
