@@ -1,6 +1,6 @@
 # Roadmap — zig-cpp-platform-stack-adapter
 
-> The versioned plan for this library's public API surface. Windowing + input, **renderer-agnostic**, on a swappable backend: **SDL3 today**, native per-OS ports **after v1.0**. Sprint-level breakdown: [`sprint.md`](sprint.md).
+> The versioned plan for this library's public API surface. Windowing + input, **renderer-agnostic**, on a swappable backend: **SDL3 today**, native per-OS ports **after v1.0**. Actionable breakdown: [`completion-plan.md`](completion-plan.md).
 
 ## Backend
 
@@ -79,5 +79,5 @@ The four rules that keep the SDL3 → native backend swap cheap:
 ## See also
 
 - Companion library: [zig-cpp-vulkan-stack-adapter](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter)
-- Sprint plan: [`sprint.md`](sprint.md) · Test apps: [`validation-apps.md`](validation-apps.md)
+- Path to 1.0: [`completion-plan.md`](completion-plan.md) · Test apps: [`validation-apps.md`](validation-apps.md)
 - Deeper design rationale: the platform spec in the [zVoxRealms](https://github.com/SETA1609/zigVoxelWorlds) project (the engine this was built for).

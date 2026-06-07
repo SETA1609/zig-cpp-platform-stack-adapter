@@ -31,4 +31,4 @@ The split above is **code authored in this repo** (a few hundred lines). If you 
 - **Authored here:** ~all Zig.
 - **In the shipped binary:** mostly SDL3's C, with a thin Zig surface on top.
 
-Estimates only — real numbers firm up as the [milestone plan](sprint.md) is completed (the v0.6.0 core and v0.7.0 window-state/mouse layers have landed; the OpenGL path and later milestones are still ahead).
+Estimates only — real numbers firm up as the [completion plan](completion-plan.md) is completed (the v0.6.0 core and v0.7.0 window-state/mouse layers have landed; the OpenGL path and later milestones are still ahead).

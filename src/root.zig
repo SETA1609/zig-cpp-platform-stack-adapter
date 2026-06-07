@@ -11,7 +11,7 @@
 //! These signatures are the **contract**; the bodies are stubs
 //! (`@panic("not implemented")`) until the SDL3 backend under
 //! `src/backend/sdl3.zig` fills them in across the v0.6.0 milestone (see
-//! `docs/sprint.md`). Calling an unimplemented function compiles and links
+//! `docs/completion-plan.md`). Calling an unimplemented function compiles and links
 //! but traps at runtime with a clear message — so consumers can build and
 //! wire against the real surface today.
 //!

@@ -4,7 +4,7 @@
 >
 > These complement testing the library inside a larger host application: a C++ host (or any app using its own windowing/GL stack) **can't** exercise *this library's* Zig API or the renderer-handoff path — these mini-apps are the only thing that does.
 >
-> Version gates: [`ROADMAP.md`](ROADMAP.md). Milestone plan: [`sprint.md`](sprint.md).
+> Version gates: [`ROADMAP.md`](ROADMAP.md). Path to 1.0: [`completion-plan.md`](completion-plan.md).
 
 ## Completion checklist
 
