@@ -16,6 +16,7 @@ const common = @import("../common.zig");
 pub const c = @cImport({
     @cInclude("SDL3/SDL.h");
     @cInclude("SDL3/SDL_vulkan.h");
+    @cInclude("SDL3/SDL_metal.h");
 });
 
 /// libc allocator for backend-owned state (window handles, per-frame event
@@ -83,6 +84,7 @@ pub fn sleep(nanoseconds: u64) void {
 pub const WindowState = struct {
     sdl: *c.SDL_Window,
     should_close: bool,
+    metal_view: ?*anyopaque,
 };
 
 /// Plain creation inputs mapped from the public `WindowOptions` by root.zig —
@@ -122,12 +124,13 @@ pub fn windowCreate(cfg: WindowCfg) !*WindowState {
         c.SDL_DestroyWindow(sdl);
         return error.OutOfMemory;
     };
-    ws.* = .{ .sdl = sdl, .should_close = false };
+    ws.* = .{ .sdl = sdl, .should_close = false, .metal_view = null };
     _ = c.SDL_SetPointerProperty(c.SDL_GetWindowProperties(sdl), prop_key, ws);
     return ws;
 }
 
 pub fn windowDestroy(ws: *WindowState) void {
+    if (ws.metal_view) |view| c.SDL_Metal_DestroyView(@ptrCast(view));
     c.SDL_DestroyWindow(ws.sdl);
     ally.destroy(ws);
 }
@@ -317,6 +320,17 @@ pub fn windowAndroidHandle(ws: *WindowState) ?AndroidHandle {
     const props = c.SDL_GetWindowProperties(ws.sdl);
     const w = c.SDL_GetPointerProperty(props, c.SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER, null) orelse return null;
     return .{ .window = w };
+}
+
+pub const CocoaHandle = struct { layer: *anyopaque };
+
+pub fn windowCocoaHandle(ws: *WindowState) ?CocoaHandle {
+    const view = ws.metal_view orelse blk: {
+        const v = c.SDL_Metal_CreateView(ws.sdl) orelse return null;
+        ws.metal_view = @ptrCast(v);
+        break :blk v;
+    };
+    return .{ .layer = @ptrCast(c.SDL_Metal_GetLayer(@ptrCast(view))) };
 }
 
 // -- OpenGL context (ladder step 13) -----------------------------------------
