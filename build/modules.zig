@@ -1,3 +1,9 @@
+//! Module and library creation for the platform-stack adapter.
+//!
+//! Creates the `platform` Zig module (`src/root.zig`), pulls in the SDL3
+//! dependency as a static library, and produces the `platform` static-link
+//! artifact that downstream (zGameLib) `linkLibrary`s.
+
 const std = @import("std");
 
 pub const Modules = struct {

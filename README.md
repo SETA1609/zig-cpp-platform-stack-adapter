@@ -127,6 +127,31 @@ The **backend** (the windowing implementation) is a separate axis from the per-w
 3. Engine-canonical behavior, with honest per-OS divergence exposed as capability flags.
 4. Integration tests run against every supported backend.
 
+## Build system
+
+The build follows a three-tier DAG pattern shared with the sibling libraries:
+
+| Layer | File | Role |
+|-------|------|------|
+| **Root** | `build.zig` | Entry point; resolves target/optimize, delegates to the three sub-steps |
+| **Modules** | `build/modules.zig` | Creates the `platform` Zig module (`src/root.zig`), pulls in the SDL3 dependency, produces a `platform` static-library artifact |
+| **Tests** | `build/tests.zig` | Wires `test` (contract unit tests via `src/tests/api_test.zig`) and `test-tdd` (behavioural TDD suite via `src/tests/tdd/main.zig`) |
+| **Dev** | `build/dev.zig` | Creates a smoke demo (`demo/main.zig`) that imports the module like a downstream consumer; registers the `pipeline` default step |
+
+### Build steps
+
+| Command | What it runs |
+|---------|-------------|
+| `zig build` | **pipeline** — build the static library (`zig-out/lib/libplatform.a`) |
+| `zig build test` | Contract unit tests (public API signatures, error sets, enum discriminants) |
+| `zig build test-tdd` | Red→green TDD suite (fails until the backend implementation is complete) |
+| `zig build run` | Build + run the smoke demo |
+
+### Flags
+
+- `-Dtarget=<triple>` — cross-compile target (default: host)
+- `-Doptimize=<mode>` — Debug / ReleaseFast / ReleaseSafe / ReleaseSmall
+
 ## Companion & origin
 
 - Companion: [zig-cpp-vulkan-stack-adapter](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter) — pair the two for a full window→Vulkan-surface path (each is usable alone).
