@@ -151,6 +151,7 @@ The build follows a three-tier DAG pattern shared with the sibling libraries:
 
 - `-Dtarget=<triple>` — cross-compile target (default: host)
 - `-Doptimize=<mode>` — Debug / ReleaseFast / ReleaseSafe / ReleaseSmall
+- `-Dbackend=<name>` — windowing backend: `sdl3` (default, active), `native` (planned post-1.0)
 
 ## Companion & origin
 

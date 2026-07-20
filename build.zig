@@ -16,6 +16,7 @@
 //!
 //! - `-Dtarget=<triple>` — cross-compile target (default: host)
 //! - `-Doptimize=<mode>` — Debug / ReleaseFast / ReleaseSafe / ReleaseSmall
+//! - `-Dbackend=<name>` — windowing backend: `sdl3` (default), `native` (future)
 
 const std = @import("std");
 
