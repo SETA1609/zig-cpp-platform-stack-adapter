@@ -1,95 +1,34 @@
-//! Build script for zig-cpp-platform-stack-adapter.
+//! Root build entry point for the **platform-stack adapter**.
 //!
-//! Produces two things downstream consumes:
-//!   1. A Zig module named "platform" (the public API in src/root.zig).
-//!   2. A static-library artifact named "platform" that bundles the compiled
-//!      Zig glue and links SDL3 (built via castholm/SDL).
+//! Delegates to `build/modules.zig` (module + library creation), `build/tests.zig`
+//! (unit + TDD test steps), and `build/dev.zig` (smoke demo + pipeline step).
 //!
-//! Downstream apps import the module for the API and `linkLibrary` the
-//! artifact to pull in SDL3 transitively — see ../README.md for the
-//! libs-first / link-the-artifact model.
+//! ## Build steps
+//!
+//! | Command | Target |
+//! |---------|--------|
+//! | `zig build` | `pipeline` — build the static library |
+//! | `zig build test` | Run the contract unit tests |
+//! | `zig build test-tdd` | Run the red→green TDD suite |
+//! | `zig build run` | Build + run the smoke demo |
+//!
+//! ## Flags
+//!
+//! - `-Dtarget=<triple>` — cross-compile target (default: host)
+//! - `-Doptimize=<mode>` — Debug / ReleaseFast / ReleaseSafe / ReleaseSmall
+//! - `-Dbackend=<name>` — windowing backend: `sdl3` (default), `native` (future)
 
 const std = @import("std");
+
+const modules = @import("build/modules.zig");
+const tests = @import("build/tests.zig");
+const dev = @import("build/dev.zig");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // SDL3 packaged for the Zig build system. Pinned in build.zig.zon.
-    const sdl_dep = b.dependency("sdl", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const sdl_lib = sdl_dep.artifact("SDL3");
-
-    // Public Zig API. `addModule` registers it under the name "platform"
-    // so downstream `b.dependency("platform", ...).module("platform")`
-    // resolves it.
-    const platform_mod = b.addModule("platform", .{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-    platform_mod.linkLibrary(sdl_lib);
-
-    // Static-library artifact. Downstream `linkLibrary` on this pulls in
-    // the compiled Zig glue and (transitively) SDL3.
-    const platform_lib = b.addLibrary(.{
-        .name = "platform",
-        .linkage = .static,
-        .root_module = platform_mod,
-    });
-    b.installArtifact(platform_lib);
-
-    // --- `zig build run` ----------------------------------------------------
-    // A smoke demo that imports the module as a consumer would. Prints library
-    // info without calling the stubbed backend (see demo/main.zig).
-    const demo_mod = b.createModule(.{
-        .root_source_file = b.path("demo/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    demo_mod.addImport("platform", platform_mod);
-    demo_mod.linkLibrary(platform_lib);
-    const demo = b.addExecutable(.{ .name = "smoke", .root_module = demo_mod });
-    b.installArtifact(demo);
-    const run_cmd = b.addRunArtifact(demo);
-    run_cmd.step.dependOn(b.getInstallStep());
-    if (b.args) |args| run_cmd.addArgs(args);
-    b.step("run", "Build + run the smoke demo").dependOn(&run_cmd.step);
-
-    // --- `zig build test` ---------------------------------------------------
-    // Unit tests for the public surface. Data/contract tests run today;
-    // behavioral tests are skipped until the SDL3 backend lands (see
-    // src/tests/api_test.zig). CI gates merges to `main` on this step.
-    const test_mod = b.createModule(.{
-        .root_source_file = b.path("src/tests/api_test.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    test_mod.addImport("platform", platform_mod);
-    const tests = b.addTest(.{ .root_module = test_mod });
-    const run_tests = b.addRunArtifact(tests);
-    b.step("test", "Run the platform unit tests")
-        .dependOn(&run_tests.step);
-
-    // --- `zig build test-tdd` -----------------------------------------------
-    // Ordered red→green TDD suite (src/tests/tdd/, one file per function group,
-    // in implementation order). Every test calls a real function and asserts
-    // its result, but is gated behind a per-function `done` flag so it SKIPS
-    // until implemented — so this step is green (all skipped) today and a
-    // contributor flips one flag, makes that function pass, and PRs it (see
-    // CONTRIBUTING.md). Kept off CI's `test` step; needs a display server.
-    // Focus the loop with `zig build test-tdd -- --test-filter <name>`.
-    const tdd_mod = b.createModule(.{
-        .root_source_file = b.path("src/tests/tdd/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    tdd_mod.addImport("platform", platform_mod);
-    const tdd_tests = b.addTest(.{ .root_module = tdd_mod });
-    const run_tdd_tests = b.addRunArtifact(tdd_tests);
-    b.step("test-tdd", "Run the red→green TDD suite (fails until the backend is implemented)")
-        .dependOn(&run_tdd_tests.step);
+    const m = modules.create(b, target, optimize);
+    const t = tests.create(b, target, optimize, m);
+    dev.create(b, target, optimize, m, t);
 }

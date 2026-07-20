@@ -545,10 +545,10 @@ pub fn getAndroidHandle(window: *Window) ?struct { window: *anyopaque } {
     return .{ .window = h.window };
 }
 
-/// macOS `CAMetalLayer*`, or `null` if not on macOS. *(deferred — see ROADMAP)*
+/// macOS `CAMetalLayer*`, or `null` if not on macOS. *(since v0.9.0)*
 pub fn getCocoaHandle(window: *Window) ?struct { layer: *anyopaque } {
-    _ = window;
-    return null; // macOS / Metal layer is deferred — always null for now.
+    const h = backend.windowCocoaHandle(window.state()) orelse return null;
+    return .{ .layer = h.layer };
 }
 
 /// The Vulkan instance extensions required to present to this window — as

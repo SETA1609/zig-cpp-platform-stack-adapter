@@ -71,9 +71,9 @@ jobs:
         with:
           version: 0.16.0
           use-cache: true
-      - name: Install Xvfb + Mesa software GL
-        run: sudo apt-get update && sudo apt-get install -y xvfb mesa-utils libgl1-mesa-dri libglx-mesa0
-      - name: test-tdd under Xvfb (llvmpipe)
+      - name: Install display deps (xvfb + Mesa software Vulkan/GL)
+        run: python scripts/install_display_deps.py
+      - name: test-tdd under Xvfb (llvmpipe + lavapipe)
         env:
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: xvfb-run -a zig build test-tdd
