@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Run the gated red→green TDD suite. Optional arg = --test-filter substring.
-#   ./scripts/tdd.sh                   # whole suite (counts only)
-#   ./scripts/tdd.sh "Window.create"   # just matching tests (full output, panics shown)
-# Needs a display server (X11/Wayland); for headless: SDL_VIDEODRIVER=dummy ./scripts/tdd.sh
+#   ./scripts/ci/tdd.sh                   # whole suite (counts only)
+#   ./scripts/ci/tdd.sh "Window.create"   # just matching tests (full output, panics shown)
+# Needs a display server (X11/Wayland); for headless: SDL_VIDEODRIVER=dummy ./scripts/ci/tdd.sh
 set -uo pipefail
 cd "$(dirname "$0")/.."
 if [ -n "${1:-}" ]; then

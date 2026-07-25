@@ -2,7 +2,7 @@ name: CI
 
 # Runs on every push (any branch) and every PR. The `build` job is the merge
 # gate: make it a required status check in branch protection for `main`. The
-# actual checks live in scripts/ci.sh (single source of truth, runnable locally).
+# actual checks live in scripts/ci/ci.sh (single source of truth, runnable locally).
 on:
   push:
     branches: ['**']
@@ -14,7 +14,7 @@ permissions:
 
 defaults:
   run:
-    shell: bash # so scripts/ci.sh runs on the Windows runner too
+    shell: bash # so scripts/ci/ci.sh runs on the Windows runner too
 
 jobs:
   # Lint the workflow YAML itself for safety (structure, action pinning,
@@ -56,7 +56,7 @@ jobs:
       # behavioral test-tdd suite needs a display + GL — it runs in the
       # display-tests job below (Xvfb + Mesa software GL).
       - name: CI checks
-        run: bash scripts/ci.sh
+        run: bash scripts/ci/ci.sh
 
   # Headless display coverage: the behavioral test-tdd suite under Xvfb + Mesa
   # llvmpipe (software GL). It needs a display (window creation) and GL (the v0.6
@@ -72,7 +72,7 @@ jobs:
           version: 0.16.0
           use-cache: true
       - name: Install display deps (xvfb + Mesa software Vulkan/GL)
-        run: python scripts/install_display_deps.py
+        run: python scripts/ci/install_display_deps.py
       - name: test-tdd under Xvfb (llvmpipe + lavapipe)
         env:
           LIBGL_ALWAYS_SOFTWARE: "1"
