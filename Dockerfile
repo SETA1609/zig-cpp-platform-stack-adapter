@@ -7,7 +7,7 @@
 # SDL3 is built from source by the castholm/SDL Zig package (headers vendored),
 # so the *build* needs no system -dev packages — only the X11/Wayland **runtime**
 # libs (+ xvfb) to actually open a window for the behavioral tests. The contract
-# suite (`scripts/ci.sh`) needs no display. First `zig build` fetches the pinned
+# suite (`scripts/ci/ci.sh`) needs no display. First `zig build` fetches the pinned
 # deps (network).
 FROM ubuntu:24.04
 ARG ZIG_VERSION=0.16.0
@@ -32,4 +32,4 @@ WORKDIR /work
 COPY . .
 RUN python3 -m pip install --break-system-packages --quiet pyyaml || true
 
-CMD ["bash", "scripts/ci.sh"]
+CMD ["bash", "scripts/ci/ci.sh"]
