@@ -207,7 +207,7 @@ def run_ci_subcommand(
     repository_root: Path, extra_arguments: Sequence[str], run_log: RunLog
 ) -> int:
     """
-    The CI gate (`scripts/ci.sh`: fmt, build, smoke demo, contract tests) in the container.
+    The CI gate (`scripts/ci/ci.sh`: fmt, build, smoke demo, contract tests) in the container.
     """
     keep_zig_cache, ci_arguments = split_keep_zig_cache_flag(extra_arguments)
     if ci_arguments:
@@ -216,7 +216,7 @@ def run_ci_subcommand(
         )
         return EXIT_CODE_USAGE_ERROR
     return run_command_in_container(
-        repository_root, ["bash", "scripts/ci.sh"], keep_zig_cache, run_log
+        repository_root, ["bash", "scripts/ci/ci.sh"], keep_zig_cache, run_log
     )
 
 
@@ -325,7 +325,7 @@ SUBCOMMANDS: dict[str, tuple[SubcommandFunction, str]] = {
     "build": (run_build_subcommand, "run `zig build [args...]` in the container"),
     "test": (run_test_subcommand, "run `zig build test [args...]` in the container"),
     "zig": (run_zig_subcommand, "run `zig [args...]` in the container"),
-    "ci": (run_ci_subcommand, "run the CI gate (scripts/ci.sh) in the container"),
+    "ci": (run_ci_subcommand, "run the CI gate (scripts/ci/ci.sh) in the container"),
     "tdd": (run_tdd_subcommand, "run `zig build test-tdd [args...]` under Xvfb"),
     "shell": (open_interactive_container_shell, "open an interactive bash in the container"),
     "prune": (run_prune_subcommand, "remove dangling images and unused build cache"),

@@ -1,6 +1,6 @@
 # devops
 
-Host-side CLI that runs this adapter's Zig toolchain container (`platform-stack-adapter:zig-0.17.0`, built from the root `Dockerfile`) and logs every run. It is optional: `scripts/ci.sh` and `scripts/tdd.sh` still work with a local Zig 0.17.0. Use it when your host Zig is a different version, when you have no display for the behavioural tests, or when you want a log of a run.
+Host-side CLI that runs this adapter's Zig toolchain container (`platform-stack-adapter:zig-0.17.0`, built from the root `Dockerfile`) and logs every run. It is optional: `scripts/ci/ci.sh` and `scripts/ci/tdd.py` still work with a local Zig 0.17.0. Use it when your host Zig is a different version, when you have no display for the behavioural tests, or when you want a log of a run.
 
 The host needs only [uv](https://docs.astral.sh/uv/) and docker or podman. At runtime the CLI uses only the Python standard library.
 
@@ -18,7 +18,7 @@ Run it from the repo root through the shim, which calls `uv run --project tools/
 | `build [args...]` | `zig build [args...]` in the container. |
 | `test [args...]` | `zig build test [args...]` (the contract suite). |
 | `zig [args...]` | Any zig command, for example `./scripts/container.sh zig version`. |
-| `ci` | The CI gate, `scripts/ci.sh`: fmt, build, smoke demo, contract tests. |
+| `ci` | The CI gate, `scripts/ci/ci.sh`: fmt, build, smoke demo, contract tests. |
 | `tdd [args...]` | `zig build test-tdd [args...]` under Xvfb with software GL, as the `display-tests` CI job runs it. |
 | `shell` | Interactive bash in the container, with the repo at `/src`. |
 | `prune` | Removes dangling images and unused build cache. The tagged image and the cache volume stay. |

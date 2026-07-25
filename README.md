@@ -159,8 +159,8 @@ The build follows a three-tier DAG pattern shared with the sibling libraries:
 
 | Command | What it runs | Needs |
 |---------|-------------|-------|
-| `./scripts/ci.sh` | The CI gate: `zig fmt --check`, build, smoke demo, contract tests | Zig 0.17.0 (`.zig-version`) |
-| `./scripts/tdd.sh [filter]` | The behavioural suite (`zig build test-tdd`) | Zig 0.17.0 and a display |
+| `./scripts/ci/ci.sh` | The CI gate: `zig fmt --check`, build, smoke demo, contract tests | Zig 0.17.0 (`.zig-version`) |
+| `python scripts/ci/tdd.py [filter]` | The behavioural suite (`zig build test-tdd`) | Zig 0.17.0 and a display |
 | `./scripts/container.sh ci` | The CI gate in the pinned container, logged to `cache/logs/` | uv, docker or podman |
 | `./scripts/container.sh tdd` | The behavioural suite under Xvfb with software GL and Vulkan | uv, docker or podman |
 
