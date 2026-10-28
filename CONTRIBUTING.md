@@ -149,6 +149,8 @@ platform-specific shims) — but it must stay **behind the Zig API**:
 - **Zig 0.17.0** (the build uses 0.17 APIs: `addTranslateC`, `addPassthruArgs`).
 - `zig build` — build; `zig build test` — the contract suite; `zig build test-tdd` — the red→green TDD suite (needs a display server).
 - **`./scripts/ci.sh`** runs the exact CI gate locally (fmt + build + smoke demo + contract test) — the workflow just installs Zig and calls this same script.
+- **Container with logs:** `./scripts/container.sh ci` and `./scripts/container.sh tdd` run the gate and the display suite in the pinned 0.17.0 image, with timestamped logs in `cache/logs/`. Needs uv and docker or podman. Details: [tools/devops/README.md](tools/devops/README.md).
+- **Changelog:** add an entry for your change to `CHANGELOG.md` and update its `Last updated` timestamp.
 - **Reproducible container:** `docker build -t platform-stack .` then `docker run --rm platform-stack` runs that gate in a clean image; `docker run --rm platform-stack xvfb-run -a zig build test-tdd` runs the windowed/input suite headless.
 - Lint before pushing: `zig fmt --check .` and (for any C/C++) `clang-format --dry-run -Werror`. CI runs these, plus a `lint-workflows` job that validates the workflow YAML with the bundled [`check-workflows` skill](.claude/skills/check-workflows) (`python3 .claude/skills/check-workflows/validate_workflows.py`).
 
