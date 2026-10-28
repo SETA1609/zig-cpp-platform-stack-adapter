@@ -382,7 +382,7 @@ pub fn events() EventFrame {
 /// call site rather than silently.
 inline fn toId(enum_value: anytype) u16 {
     switch (@typeInfo(@TypeOf(enum_value))) {
-        .@"enum" => return @intCast(@intFromEnum(enum_value)),
+        .@"enum" => return @intCast(@backingInt(enum_value)),
         else => @compileError("expected an enum value (your own action/context enum), got " ++ @typeName(@TypeOf(enum_value))),
     }
 }

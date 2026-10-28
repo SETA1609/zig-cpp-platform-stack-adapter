@@ -89,7 +89,7 @@ now") is exactly what our action layer uses.
   `offscreen`) — but note `dummy` has no Vulkan/native handles.
 - **Native handles live in window properties (SDL3), not getters (SDL2).**
   `SDL_GetWindowProperties(win)` → `SDL_GetPointerProperty(props, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, null)` etc.
-- **`@cImport` enum-constant signedness:** SDL's C enum *types* import as `c_uint`
+- **translate-c enum-constant signedness:** SDL's C enum *types* import as `c_uint`
   but their *constants* as `c_int` — mixed arithmetic needs an explicit `@intCast`
   (bit us in the scancode mapping).
 - **Vulkan extensions need the loader first.** `SDL_Vulkan_GetInstanceExtensions`

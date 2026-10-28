@@ -29,8 +29,7 @@ fn parseBackend(opt: []const u8) Backend {
 }
 
 pub fn create(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) Modules {
-    const backend_opt = b.option([]const u8, "backend",
-        "Windowing backend: sdl3, native (default: sdl3)") orelse "sdl3";
+    const backend_opt = b.option([]const u8, "backend", "Windowing backend: sdl3, native (default: sdl3)") orelse "sdl3";
     const backend = parseBackend(backend_opt);
 
     const sdl_dep = b.dependency("sdl", .{ .target = target, .optimize = optimize });
@@ -44,10 +43,21 @@ pub fn create(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.bui
     });
     platform_mod.linkLibrary(sdl_lib);
 
+    // Zig 0.17 removed @cImport: the SDL3 headers are translated here into
+    // the `sdl3_c` module, imported only by src/backend/sdl3.zig.
+    const sdl_translate_c = b.addTranslateC(.{
+        .root_source_file = b.path("src/backend/sdl3_c.h"),
+        .target = target,
+        .optimize = optimize,
+    });
+    sdl_translate_c.addIncludePath(sdl_dep.path("include"));
+    platform_mod.addImport("sdl3_c", sdl_translate_c.createModule());
+
     const build_config = b.addOptions();
-    inline for (@typeInfo(Backend).@"enum".fields) |field| {
-        const p: Backend = @enumFromInt(field.value);
-        build_config.addOption(bool, b.fmt("backend_{s}", .{field.name}), p == backend);
+    const backend_info = @typeInfo(Backend).@"enum";
+    inline for (backend_info.field_names, backend_info.field_values) |field_name, field_value| {
+        const p: Backend = @fromBackingInt(@intCast(field_value));
+        build_config.addOption(bool, b.fmt("backend_{s}", .{field_name}), p == backend);
     }
     platform_mod.addOptions("build_config", build_config);
 

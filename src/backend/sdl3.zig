@@ -2,8 +2,8 @@
 //!
 //! This is the **only** file that touches SDL — `root.zig` delegates here, and
 //! no `SDL_*` type ever crosses back out to the public API (design Rule 1). The
-//! C surface is reached through `@cImport`; the SDL3 headers come from the
-//! `castholm/SDL` artifact that `build.zig` links into the module.
+//! C surface is the `sdl3_c` module, which `build/modules.zig` translates from
+//! `sdl3_c.h` against the headers of the `castholm/SDL` package.
 //!
 //! Implemented incrementally along the ladder in `CONTRIBUTING.md`. Filled so
 //! far: lifecycle (step 1), time (step 2), window (step 3), events (step 4),
@@ -13,11 +13,7 @@ const std = @import("std");
 const common = @import("../common.zig");
 
 /// SDL3's C API. Behind this boundary only — never re-exported.
-pub const c = @cImport({
-    @cInclude("SDL3/SDL.h");
-    @cInclude("SDL3/SDL_vulkan.h");
-    @cInclude("SDL3/SDL_metal.h");
-});
+pub const c = @import("sdl3_c");
 
 /// libc allocator for backend-owned state (window handles, per-frame event
 /// buffers). Distinct from any caller-supplied allocator, and untracked by the
@@ -110,7 +106,7 @@ pub fn windowCreate(cfg: WindowCfg) !*WindowState {
     if (cfg.borderless) flags |= c.SDL_WINDOW_BORDERLESS;
     if (cfg.fullscreen) flags |= c.SDL_WINDOW_FULLSCREEN;
 
-    const title_z = try ally.dupeZ(u8, cfg.title);
+    const title_z = try ally.dupeSentinel(u8, cfg.title, 0);
     defer ally.free(title_z);
 
     const sdl = c.SDL_CreateWindow(title_z.ptr, @intCast(cfg.w), @intCast(cfg.h), flags) orelse
@@ -161,7 +157,7 @@ pub fn windowScaleFactor(ws: *WindowState) f32 {
 
 pub fn windowSetTitle(ws: *WindowState, title: []const u8) void {
     // SDL copies the title, but needs a NUL-terminated C string.
-    const title_z = ally.dupeZ(u8, title) catch return;
+    const title_z = ally.dupeSentinel(u8, title, 0) catch return;
     defer ally.free(title_z);
     _ = c.SDL_SetWindowTitle(ws.sdl, title_z.ptr);
 }
@@ -546,8 +542,8 @@ fn mouseButtonFrom(b: u8) common.MouseButton {
 fn keyFromScancode(sc: c.SDL_Scancode) common.KeyCode {
     const s: c_uint = sc;
     if (s >= c.SDL_SCANCODE_A and s <= c.SDL_SCANCODE_Z) {
-        const base: u16 = @intFromEnum(common.KeyCode.a);
-        return @enumFromInt(base + @as(u16, @intCast(s - c.SDL_SCANCODE_A)));
+        const base: u16 = @backingInt(common.KeyCode.a);
+        return @fromBackingInt(@intCast(base + @as(u16, @intCast(s - c.SDL_SCANCODE_A))));
     }
     return switch (s) {
         c.SDL_SCANCODE_SPACE => .space,
@@ -705,9 +701,9 @@ fn mouseHeld(btn: common.MouseButton) bool {
 /// live keyboard state. Letters use the contiguous range; a handful of common
 /// keys are explicit; the rest are `SDL_SCANCODE_UNKNOWN` (never held).
 fn scancodeFromKey(code: common.KeyCode) c_uint {
-    const v: u16 = @intFromEnum(code);
-    const a: u16 = @intFromEnum(common.KeyCode.a);
-    const z: u16 = @intFromEnum(common.KeyCode.z);
+    const v: u16 = @backingInt(code);
+    const a: u16 = @backingInt(common.KeyCode.a);
+    const z: u16 = @backingInt(common.KeyCode.z);
     if (v >= a and v <= z) {
         const base: c_uint = @intCast(c.SDL_SCANCODE_A);
         return base + @as(c_uint, v - a);

@@ -17,45 +17,45 @@ const platform = @import("platform");
 
 // WHEN reading Renderer's integer values · GIVEN the enum's wire contract · THEN none=0, vulkan=1, opengl=2, cpu=3, metal=4, directx=5 (new variants append; existing values are stable).
 test "enum values: Renderer" {
-    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(platform.Renderer.none));
-    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(platform.Renderer.vulkan));
-    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(platform.Renderer.opengl));
-    try std.testing.expectEqual(@as(u8, 3), @intFromEnum(platform.Renderer.cpu));
-    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(platform.Renderer.metal));
-    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(platform.Renderer.directx));
+    try std.testing.expectEqual(@as(u8, 0), @backingInt(platform.Renderer.none));
+    try std.testing.expectEqual(@as(u8, 1), @backingInt(platform.Renderer.vulkan));
+    try std.testing.expectEqual(@as(u8, 2), @backingInt(platform.Renderer.opengl));
+    try std.testing.expectEqual(@as(u8, 3), @backingInt(platform.Renderer.cpu));
+    try std.testing.expectEqual(@as(u8, 4), @backingInt(platform.Renderer.metal));
+    try std.testing.expectEqual(@as(u8, 5), @backingInt(platform.Renderer.directx));
 }
 
 // WHEN reading MouseButton's integer values · GIVEN the enum's wire contract · THEN left=0, right=1, middle=2, x1=3, x2=4.
 test "enum values: MouseButton" {
-    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(platform.MouseButton.left));
-    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(platform.MouseButton.right));
-    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(platform.MouseButton.middle));
-    try std.testing.expectEqual(@as(u8, 3), @intFromEnum(platform.MouseButton.x1));
-    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(platform.MouseButton.x2));
+    try std.testing.expectEqual(@as(u8, 0), @backingInt(platform.MouseButton.left));
+    try std.testing.expectEqual(@as(u8, 1), @backingInt(platform.MouseButton.right));
+    try std.testing.expectEqual(@as(u8, 2), @backingInt(platform.MouseButton.middle));
+    try std.testing.expectEqual(@as(u8, 3), @backingInt(platform.MouseButton.x1));
+    try std.testing.expectEqual(@as(u8, 4), @backingInt(platform.MouseButton.x2));
 }
 
 // WHEN reading GamepadButton/GamepadAxis anchor values · GIVEN the contract in enum-values.md · THEN a=0, dpad_right=14, left_x=0, right_trigger=5.
 test "enum values: GamepadButton + GamepadAxis (match enum-values.md)" {
-    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(platform.GamepadButton.a));
-    try std.testing.expectEqual(@as(u8, 14), @intFromEnum(platform.GamepadButton.dpad_right));
-    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(platform.GamepadAxis.left_x));
-    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(platform.GamepadAxis.right_trigger));
+    try std.testing.expectEqual(@as(u8, 0), @backingInt(platform.GamepadButton.a));
+    try std.testing.expectEqual(@as(u8, 14), @backingInt(platform.GamepadButton.dpad_right));
+    try std.testing.expectEqual(@as(u8, 0), @backingInt(platform.GamepadAxis.left_x));
+    try std.testing.expectEqual(@as(u8, 5), @backingInt(platform.GamepadAxis.right_trigger));
 }
 
 // WHEN reading KeyCode anchor values · GIVEN the contract in enum-values.md · THEN unknown=0, a=1, w=23, escape=43, f12=83.
 test "enum values: KeyCode anchors (match enum-values.md)" {
-    try std.testing.expectEqual(@as(u16, 0), @intFromEnum(platform.KeyCode.unknown));
-    try std.testing.expectEqual(@as(u16, 1), @intFromEnum(platform.KeyCode.a));
-    try std.testing.expectEqual(@as(u16, 23), @intFromEnum(platform.KeyCode.w));
-    try std.testing.expectEqual(@as(u16, 43), @intFromEnum(platform.KeyCode.escape));
-    try std.testing.expectEqual(@as(u16, 83), @intFromEnum(platform.KeyCode.f12));
+    try std.testing.expectEqual(@as(u16, 0), @backingInt(platform.KeyCode.unknown));
+    try std.testing.expectEqual(@as(u16, 1), @backingInt(platform.KeyCode.a));
+    try std.testing.expectEqual(@as(u16, 23), @backingInt(platform.KeyCode.w));
+    try std.testing.expectEqual(@as(u16, 43), @backingInt(platform.KeyCode.escape));
+    try std.testing.expectEqual(@as(u16, 83), @backingInt(platform.KeyCode.f12));
 }
 
 // WHEN inspecting the ActionId/InputContextId/KeyCode type info · GIVEN consumer-extensible ids · THEN the id enums are u16-backed and non-exhaustive.
 test "extensible enums are non-exhaustive and u16-backed" {
     try std.testing.expectEqual(u16, @typeInfo(platform.ActionId).@"enum".tag_type);
     try std.testing.expectEqual(u16, @typeInfo(platform.InputContextId).@"enum".tag_type);
-    try std.testing.expect(!@typeInfo(platform.ActionId).@"enum".is_exhaustive);
+    try std.testing.expect(@typeInfo(platform.ActionId).@"enum".mode == .nonexhaustive);
     try std.testing.expectEqual(u16, @typeInfo(platform.KeyCode).@"enum".tag_type);
 }
 

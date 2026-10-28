@@ -10,7 +10,7 @@
 # suite (`scripts/ci.sh`) needs no display. First `zig build` fetches the pinned
 # deps (network).
 FROM ubuntu:24.04
-ARG ZIG_VERSION=0.16.0
+ARG ZIG_VERSION=0.17.0
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

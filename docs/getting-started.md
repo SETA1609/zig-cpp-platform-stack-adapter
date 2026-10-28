@@ -4,7 +4,7 @@ A from-scratch walkthrough: add the dependency, wire the build, and write a
 minimal window + input loop. For the API reference see [`api.md`](api.md); for
 how SDL3 works underneath see [`sdl3-cheat-sheet.md`](sdl3-cheat-sheet.md).
 
-**Requires Zig 0.16+.**
+**Requires Zig 0.17.0.**
 
 ## 1. Add the dependency
 
