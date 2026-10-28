@@ -38,6 +38,8 @@ A standalone **Zig library**: one stable, **renderer-agnostic** API for windowin
 - [`docs/dependencies.md`](docs/dependencies.md) — consumed libraries + Zig/C/C++ language split
 - [`docs/cheat_sheet.md`](docs/cheat_sheet.md) — Zig/C/C++ cross-language field guide
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute (OpenGL + native-backend PRs welcome)
+- [`tools/devops/README.md`](tools/devops/README.md) — run the build and tests in the pinned Zig 0.17.0 container, with logs
+- [`CHANGELOG.md`](CHANGELOG.md) — changes per issue
 - [`SECURITY.md`](SECURITY.md) — security policy
 
 ## What it is
@@ -152,6 +154,17 @@ The build follows a three-tier DAG pattern shared with the sibling libraries:
 - `-Dtarget=<triple>` — cross-compile target (default: host)
 - `-Doptimize=<mode>` — Debug / ReleaseFast / ReleaseSafe / ReleaseSmall
 - `-Dbackend=<name>` — windowing backend: `sdl3` (default, active), `native` (planned post-1.0)
+
+## Development
+
+| Command | What it runs | Needs |
+|---------|-------------|-------|
+| `./scripts/ci.sh` | The CI gate: `zig fmt --check`, build, smoke demo, contract tests | Zig 0.17.0 (`.zig-version`) |
+| `./scripts/tdd.sh [filter]` | The behavioural suite (`zig build test-tdd`) | Zig 0.17.0 and a display |
+| `./scripts/container.sh ci` | The CI gate in the pinned container, logged to `cache/logs/` | uv, docker or podman |
+| `./scripts/container.sh tdd` | The behavioural suite under Xvfb with software GL and Vulkan | uv, docker or podman |
+
+Add `--keep-cache` after the container subcommand to keep the Zig cache between runs. Every PR adds an entry to [`CHANGELOG.md`](CHANGELOG.md). More in [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`tools/devops/README.md`](tools/devops/README.md).
 
 ## Companion & origin
 
