@@ -7,7 +7,7 @@ Sections:
 1. [Zig syntax that looks like C but isn't](#1-zig-syntax-that-looks-like-c-but-isnt)
 2. [Slices, arrays, and string literals](#2-slices-arrays-and-string-literals)
 3. [Error unions vs optionals](#3-error-unions-vs-optionals)
-4. [Zig 0.16 stdlib changes (Io, ArrayList, main)](#4-zig-016-stdlib-changes-io-arraylist-main)
+4. [Zig 0.16 and 0.17 changes (Io, ArrayList, main, translate-c)](#4-zig-016-and-017-changes-io-arraylist-main-translate-c)
 5. [The FFI boundary: linking C and C++ from Zig](#5-the-ffi-boundary-linking-c-and-c-from-zig)
 6. [Stdio buffering across languages (output)](#6-stdio-buffering-across-languages-output)
 7. [Stdin across languages (input)](#7-stdin-across-languages-input)
@@ -94,7 +94,24 @@ Cheat:
 
 ---
 
-## 4. Zig 0.16 stdlib changes (Io, ArrayList, main)
+## 4. Zig 0.16 and 0.17 changes (Io, ArrayList, main, translate-c)
+
+### 0.16 → 0.17 (what this repo had to port)
+
+Moving from 0.16.0 to 0.17.0 broke these, in this repo:
+
+| 0.16 | 0.17 |
+|---|---|
+| `@cImport({ @cInclude("SDL3/SDL.h"); })` | Removed. Put the includes in a `.h` file and translate it in `build.zig`: `b.addTranslateC(.{ .root_source_file = ..., .target = ..., .optimize = ... })`, `addIncludePath(...)`, then `module.addImport("name", translate_c.createModule())` |
+| `if (b.args) \|args\| run.addArgs(args);` | `run.addPassthruArgs();` |
+| `@typeInfo(E).@"enum".fields` (`field.name`, `field.value`) | `.field_names` and `.field_values`, parallel slices |
+| `@typeInfo(E).@"enum".is_exhaustive` | `.mode == .exhaustive` / `.nonexhaustive` |
+| `allocator.dupeZ(u8, s)` | `allocator.dupeSentinel(u8, s, 0)` |
+| `[_]u8{0} ** 64` | `const a: [64]u8 = @splat(0);` (`**` is gone) |
+| `@intFromEnum(e)` / `@enumFromInt(i)` | `@backingInt(e)` / `@fromBackingInt(i)`. `zig fmt` on 0.17 rewrites these for you |
+| `b.sysroot` | Removed. castholm/SDL `v0.5.x` used it; `v0.6.0+3.4.18` targets 0.17.0 |
+
+### ≤ 0.15 → 0.16
 
 If you have an older `build.zig` lying around, several things broke between 0.13 and 0.16. The big ones:
 

@@ -2,7 +2,7 @@
 
 A standalone **Zig library**: one stable, **renderer-agnostic** API for windowing, input, time, file paths, and per-OS native handles — backed by [SDL3](https://github.com/libsdl-org/SDL). Use it with **Vulkan**, **OpenGL**, a **CPU framebuffer**, **Metal**, **D3D**, or **headless**; the backend can change underneath without your code changing.
 
-**License:** [MIT](LICENSE) · **Requires:** Zig 0.16+ · **Status:** pre-1.0, single-maintainer
+**License:** [MIT](LICENSE) · **Requires:** Zig 0.17.0 · **Status:** pre-1.0, single-maintainer
 
 > **Status detail:** the **v0.6.0 core is implemented** on the SDL3 backend —
 > windowing (`Window` create/destroy/size/setSize/scaleFactor/setTitle/

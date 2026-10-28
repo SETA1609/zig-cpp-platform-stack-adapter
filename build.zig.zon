@@ -14,7 +14,7 @@
     .fingerprint = 0x5a299f6591d1ee63,
 
     // Minimum Zig version that can build this package.
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.17.0",
 
     // Zig dependencies. Intentionally narrow.
     //
@@ -29,8 +29,8 @@
     // `zig fetch --save`. See docs/dependencies.md.
     .dependencies = .{
         .sdl = .{
-            .url = "git+https://github.com/castholm/SDL.git?ref=v0.5.0+3.4.8#21c6b79840d123e94a9f183f4b0fa1731668f48d",
-            .hash = "sdl-0.5.0+3.4.8-SDL--k4DpgH323IfF6cEaGzKUdtUQv1azbBmmcv0RMAu",
+            .url = "git+https://github.com/castholm/SDL.git?ref=v0.6.0+3.4.18#dbcb19aa3583c318556ecae3ecbeb29b102d37c5",
+            .hash = "sdl-0.6.0+3.4.18-SDL--p-gqAGWpnfTLlhs0dgjDtc4P4_CHeNLGY_SX_Fv",
         },
     },
     .paths = .{

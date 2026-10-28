@@ -46,7 +46,7 @@ jobs:
       - name: Install Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.16.0
+          version: 0.17.0
           use-cache: true
 
       - run: zig version
@@ -69,7 +69,7 @@ jobs:
       - name: Install Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.16.0
+          version: 0.17.0
           use-cache: true
       - name: Install display deps (xvfb + Mesa software Vulkan/GL)
         run: python scripts/install_display_deps.py

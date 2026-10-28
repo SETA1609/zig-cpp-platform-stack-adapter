@@ -32,7 +32,7 @@ test "audio: open, queue PCM, then drain" {
     defer platform.deinit();
     const stream = try platform.openAudioStream(.{});
     defer stream.destroy();
-    const silence = [_]u8{0} ** 64;
+    const silence: [64]u8 = @splat(0);
     try stream.queue(&silence);
     _ = stream.queued();
     stream.clear();

@@ -17,12 +17,12 @@ No GPL/LGPL dependencies (HIDAPI inside SDL is elected under BSD-3-Clause).
 | Language | Estimate | What |
 | --- | --- | --- |
 | **Zig** | **~97%** | `root.zig`, `common.zig`, `action_input.zig`, `native_handle.zig`, `backend/sdl3.zig`, `build.zig`, tests |
-| **C** | **~3%** | at most a tiny `shim.c` if `@cImport` can't translate a specific SDL macro / inline function |
+| **C** | **~3%** | `backend/sdl3_c.h` (the SDL includes for translate-c), at most a tiny `shim.c` if translate-c can't handle a specific SDL macro / inline function |
 | **C++** | **~0%** | none for the SDL3 backend |
 
 ### Why ~no C++ here
 
-SDL3 is pure **C**, and Zig consumes C natively via `@cImport` — so there is **no `extern "C"` bridge to write**. This library is effectively **pure Zig glue over a C dependency**. The `-cpp-` in the repo name follows a naming convention shared with its [companion](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter); it does *not* reflect any C++ in this adapter. C++ would only appear if a future **macOS native backend** (Objective-C++) were contributed — deferred and not maintainer-led.
+SDL3 is pure **C**, and Zig consumes C natively via translate-c (`b.addTranslateC` in `build/modules.zig`; Zig 0.17 removed `@cImport`) — so there is **no `extern "C"` bridge to write**. This library is effectively **pure Zig glue over a C dependency**. The `-cpp-` in the repo name follows a naming convention shared with its [companion](https://github.com/SETA1609/zig-cpp-vulkan-stack-adapter); it does *not* reflect any C++ in this adapter. C++ would only appear if a future **macOS native backend** (Objective-C++) were contributed — deferred and not maintainer-led.
 
 ## "Written" vs. "compiled"
 

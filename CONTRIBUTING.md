@@ -146,7 +146,7 @@ platform-specific shims) — but it must stay **behind the Zig API**:
 
 ## Dev setup
 
-- **Zig 0.16+** (the build uses post-0.16 APIs).
+- **Zig 0.17.0** (the build uses 0.17 APIs: `addTranslateC`, `addPassthruArgs`).
 - `zig build` — build; `zig build test` — the contract suite; `zig build test-tdd` — the red→green TDD suite (needs a display server).
 - **`./scripts/ci.sh`** runs the exact CI gate locally (fmt + build + smoke demo + contract test) — the workflow just installs Zig and calls this same script.
 - **Reproducible container:** `docker build -t platform-stack .` then `docker run --rm platform-stack` runs that gate in a clean image; `docker run --rm platform-stack xvfb-run -a zig build test-tdd` runs the windowed/input suite headless.
