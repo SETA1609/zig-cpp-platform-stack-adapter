@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       xvfb \
       libx11-6 libxext6 libxrandr2 libxi6 libxcursor1 libxfixes3 \
       libxkbcommon0 libwayland-client0 libgl1 \
+      libgl1-mesa-dri libglx-mesa0 libvulkan1 mesa-vulkan-drivers \
     && rm -rf /var/lib/apt/lists/*
 
 # Zig, pinned — URL resolved from the official release index.
