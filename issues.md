@@ -94,3 +94,35 @@ pub fn clipboardText(allocator: std.mem.Allocator) ![]u8;
 **Notes.** `SDL_GetClipboardText` returns an **SDL-allocated** string that must
 be freed with `SDL_free` after you copy it into the caller's allocator; the SDL
 backend needs the video subsystem initialised (it is, after `init`).
+
+---
+
+## Issue 4 — Port to Zig 0.17.0
+
+Status: done (#5)
+
+Bump castholm/SDL to `v0.6.0+3.4.18`, replace `@cImport` with a translate-c module, and apply the 0.17 std renames. Keep `scripts/ci.sh` and the test-tdd suite green.
+
+---
+
+## Issue 5 — Container devops CLI for contributors
+
+Status: done (#6)
+
+Add the host-side container CLI (`tools/devops/`, `./scripts/container.sh` with `ci` and `tdd` under Xvfb), a `.zig-version`, and the Mesa GL/Vulkan runtime in the image.
+
+---
+
+## Issue 6 — Docs after the 0.17.0 port
+
+Status: done (#7)
+
+Add a Development section to `README.md` and PR numbers to the changelog.
+
+---
+
+## Issue 7 — Own issue tracking
+
+Status: review
+
+Track this repo's work in `issues.md` with its own issue numbers, title changelog entries by those issues, and remove references to other projects' issue IDs from the docs and the changelog.

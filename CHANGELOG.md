@@ -1,22 +1,27 @@
 # Changelog
 
-Last updated: 2026-10-28T22:52Z
+Last updated: 2026-10-29T00:21Z
 
-Changes per issue, newest first. Each PR adds its entry and updates the timestamp above. Issue IDs prefixed `S0-` are from [project-new-world](https://github.com/SETA1609/project-new-world/tree/main/docs/stories), which uses this adapter as its `platform` module. History before this file: `git log`.
+Changes per issue, newest first. Issues are tracked in [issues.md](issues.md). Each PR adds its entry and updates the timestamp above. History before this file: `git log`.
 
 ## Unreleased
 
-### Docs after the 0.17.0 port
+### Issue 7 Own issue tracking
+
+- `issues.md` lists the Zig 0.17.0 work as this repo's own issues; changelog entries are titled by those issues.
+- Docs and the changelog no longer refer to other projects' issue IDs.
+
+## 2026-10-28
+
+### Issue 6 Docs after the 0.17.0 port (#7)
 
 - `README.md`: a Development section for the CI gate, the container CLI, and this changelog; `tools/devops/README.md` in the Documentation list.
 - This changelog: entries carry their PR numbers.
 
-## 2026-10-28
-
-### S0-02 Container devops CLI for contributors (#6)
+### Issue 5 Container devops CLI for contributors (#6)
 
 - Add `.zig-version` (`0.17.0`), checked against `ARG ZIG_VERSION` in the `Dockerfile`.
-- Add `tools/devops/`, a host-side Python CLI (uv; standard library only at runtime) copied from project-new-world. It runs the toolchain container with every output line timestamped and logged to `cache/logs/`.
+- Add `tools/devops/`, a host-side Python CLI (uv; standard library only at runtime). It runs the toolchain container with every output line timestamped and logged to `cache/logs/`.
 - One shim: `./scripts/container.sh <subcommand>` with `image`, `build`, `test`, `zig`, `ci` (runs `scripts/ci.sh`), `tdd` (`zig build test-tdd` under Xvfb with software GL), `shell`, `prune`, and `clean`.
 - A leading `--keep-cache` keeps the Zig global cache in the volume `platform-stack-adapter-zig-cache` until `clean`.
 - Containers run with `--init`. Without it `xvfb-run` is PID 1 and never sees Xvfb's ready signal, so `tdd` hangs.
@@ -24,7 +29,7 @@ Changes per issue, newest first. Each PR adds its entry and updates the timestam
 - `scripts/ci.sh` and `scripts/tdd.sh` are unchanged and still run without a container.
 - Checked: `container.sh ci` passes; `container.sh tdd` passes 98 and skips 34 of 132.
 
-### S0-02 Port to Zig 0.17.0 (#5)
+### Issue 4 Port to Zig 0.17.0 (#5)
 
 - castholm/SDL `v0.5.0+3.4.8` → `v0.6.0+3.4.18`, which targets 0.17.0.
 - `@cImport` is removed in 0.17: the SDL includes are in `src/backend/sdl3_c.h`, translated by `b.addTranslateC` into the `sdl3_c` module.
