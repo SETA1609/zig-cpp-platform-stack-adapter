@@ -1,10 +1,18 @@
 # Changelog
 
-Last updated: 2026-10-29T00:21Z
+Last updated: 2026-11-08T04:00Z
 
-Changes per issue, newest first. Issues are tracked in [issues.md](issues.md). Each PR adds its entry and updates the timestamp above. History before this file: `git log`.
+Changes per issue, newest first. Issues are tracked in [issues.md](issues.md). An issue branch adds its entry as `changes/issue-<n>.md` (see [changes/README.md](changes/README.md)); a release branch moves the entries into a version section here. History before this file: `git log`.
 
-## Unreleased
+## v0.7.0 (2026-11-08)
+
+The first tagged release. It holds everything below that was unreleased (this repository's own issue tracking, Issue 7) on top of the untagged v0.1.0–v0.6.0 milestones and the v0.7.0 input, window, and mouse work in [docs/ROADMAP.md](docs/ROADMAP.md).
+
+### Release bookkeeping
+
+- `docs/ROADMAP.md`: a *Releases* section (issue branches add changelog fragments; bookkeeping branches edit the roadmap, the changelog, the issue statuses, and `.version`; one minor release per milestone, tagged on `main`, never moved). Milestones re-scoped so `main` is a finished v0.7.0: it holds the four input, window, and mouse steps and `getCocoaHandle`; input contexts and application paths (Issues 1 and 2) become v0.8.0; axis modifiers, injection, and loadable bindings v0.9.0; device and input/output breadth v0.10.0; renderer paths v0.11.0; audio v0.12.0.
+- `changes/README.md` and `devops-tools.toml`: changelog fragments, checked and released with the shared devops-tools package.
+- `build.zig.zon`: `.version` 0.7.0. `issues.md`: Issue 7 is done.
 
 ### Issue 7 Own issue tracking
 

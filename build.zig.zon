@@ -6,7 +6,7 @@
     // SemVer. Bumps with breaking changes to the public Zig API
     // (root.zig re-exports). Backend swaps (SDL3 → native) bump the
     // MAJOR version.
-    .version = "0.0.0",
+    .version = "0.7.0",
 
     // Stable u64 fingerprint identifying this package across renames
     // and forks. Generated once and kept constant. `zig fetch --save`
