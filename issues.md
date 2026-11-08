@@ -6,6 +6,8 @@ the behavior, and make it pass programmatically. All public types are in
 touch SDL is `src/backend/sdl3.zig` (design Rule 1 — **no `SDL_*` type may cross
 the public API**). The gated red→green suite lives in `src/tests/tdd/`.
 
+Statuses (`todo`, `done (#pull-request)`, `dropped`) and new issues are edited only on bookkeeping branches; an issue branch adds its changelog fragment instead. See *Releases* in [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ---
 
 ## Issue 1 — Input contexts don't work: gameplay actions fire while a menu is open
@@ -123,6 +125,6 @@ Add a Development section to `README.md` and PR numbers to the changelog.
 
 ## Issue 7 — Own issue tracking
 
-Status: review
+Status: done (#8)
 
 Track this repo's work in `issues.md` with its own issue numbers, title changelog entries by those issues, and remove references to other projects' issue IDs from the docs and the changelog.
