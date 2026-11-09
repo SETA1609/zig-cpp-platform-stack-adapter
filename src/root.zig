@@ -502,6 +502,19 @@ pub fn applicationCacheDirectory(allocator: std.mem.Allocator, application_name:
     return backend.applicationCacheDirectory(allocator, application_name);
 }
 
+pub const FolderPickerRequest = @import("folder_picker_request.zig").FolderPickerRequest;
+pub const FolderPickerOutcome = @import("folder_picker_request.zig").FolderPickerOutcome;
+pub const FolderPickerError = @import("folder_picker_request.zig").FolderPickerError;
+
+/// Opens the native folder dialog and returns at once. Keep pumping events, and call `poll` on
+/// the request each frame until it stops returning null. `window` is the dialog's parent;
+/// `default_location` is the directory it opens in. Main thread only.
+pub fn requestFolderPicker(window: ?*Window, default_location: ?[]const u8) std.mem.Allocator.Error!*FolderPickerRequest {
+    _ = window;
+    _ = default_location;
+    @panic("not implemented");
+}
+
 /// Open a file/URL with the OS default handler (`xdg-open` / `start` /
 /// `open`). *(since v0.8.0)*
 pub fn openWithSystemDefault(path: []const u8) !void {
