@@ -426,32 +426,32 @@ pub fn actionValue(action: anytype) f32 {
 /// Push a context onto the input stack; it can shadow lower contexts so the
 /// same key means different things in gameplay vs. a menu. *(since v0.7.0)*
 pub fn pushContext(context: anytype) void {
-    _ = toId(context);
-    @panic("not implemented");
+    backend.pushContext(toId(context));
 }
 
 /// Pop and return the top context as a value of **your** context enum `Ctx`,
 /// or `null` if the stack is empty. *(since v0.7.0)*
 pub fn popContext(comptime Ctx: type) ?Ctx {
-    @panic("not implemented");
+    const context_id = backend.popContext() orelse return null;
+    return @fromBackingInt(@intCast(context_id));
 }
 
 /// Replace the top context in place (push+pop without churn). *(since v0.7.0)*
 pub fn replaceTopContext(context: anytype) void {
-    _ = toId(context);
-    @panic("not implemented");
+    backend.replaceTopContext(toId(context));
 }
 
 /// The context currently on top of the stack as a value of your `Ctx` enum,
 /// or `null` if no context is active. *(since v0.7.0)*
 pub fn activeContext(comptime Ctx: type) ?Ctx {
-    @panic("not implemented");
+    const context_id = backend.activeContext() orelse return null;
+    return @fromBackingInt(@intCast(context_id));
 }
 
-/// Whether a given context is anywhere on the active stack. *(since v0.7.0)*
+/// Whether `context` is the one on top of the stack: a context beneath it is
+/// shadowed, so it is not active. *(since v0.7.0)*
 pub fn isContextActive(context: anytype) bool {
-    _ = toId(context);
-    @panic("not implemented");
+    return backend.activeContext() == toId(context);
 }
 
 /// Inject a synthetic action through the **same** downstream path as real

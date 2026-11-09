@@ -44,6 +44,7 @@ pub fn deinit() void {
     binds.clearRetainingCapacity();
     injects.clearRetainingCapacity();
     states.clearRetainingCapacity();
+    context_stack.clearRetainingCapacity();
     c.SDL_Quit();
 }
 
@@ -574,6 +575,29 @@ const ActionState = struct { action: u16, pressed: bool = false, prev: bool = fa
 var binds: std.ArrayList(BindEntry) = .empty;
 var injects: std.ArrayList(InjectEntry) = .empty;
 var states: std.ArrayList(ActionState) = .empty;
+/// Input contexts, bottom first; the last item is the active one.
+var context_stack: std.ArrayList(u16) = .empty;
+
+/// Makes `context` the active input context.
+pub fn pushContext(context: u16) void {
+    context_stack.append(ally, context) catch {};
+}
+
+/// Removes and returns the active context; null when the stack is empty.
+pub fn popContext() ?u16 {
+    return context_stack.pop();
+}
+
+/// Swaps the active context in place, or pushes on an empty stack.
+pub fn replaceTopContext(context: u16) void {
+    if (context_stack.items.len == 0) return pushContext(context);
+    context_stack.items[context_stack.items.len - 1] = context;
+}
+
+/// The active context; null when the stack is empty.
+pub fn activeContext() ?u16 {
+    return context_stack.getLastOrNull();
+}
 
 fn statePtr(action: u16) ?*ActionState {
     for (states.items) |*s| if (s.action == action) return s;
