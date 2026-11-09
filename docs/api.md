@@ -216,6 +216,12 @@ pub fn sleep(ns: u64) void;
 ```zig
 pub fn applicationDataDirectory(allocator: std.mem.Allocator, app_name: []const u8) ![]u8;   // caller frees
 pub fn applicationCacheDirectory(allocator: std.mem.Allocator, app_name: []const u8) ![]u8;  // caller frees
+
+// --- native folder picker: asynchronous, so start it and poll from your loop ---
+pub const FolderPickerOutcome = union(enum) { selected: []u8, canceled };  // caller frees `selected`
+pub fn requestFolderPicker(window: ?*Window, default_location: ?[]const u8) !*FolderPickerRequest;
+pub fn FolderPickerRequest.poll(self: *FolderPickerRequest, allocator: std.mem.Allocator) FolderPickerError!?FolderPickerOutcome;
+// null while open. After an outcome or an error the request is gone. Keep pumping events while it is open.
 pub fn openWithSystemDefault(path: []const u8) !void;                          // xdg-open / start / open
 ```
 

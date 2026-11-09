@@ -196,3 +196,7 @@ nm <binary> | grep -i 'vk[A-Z]\|VK_'   # must print NOTHING
 
 **Pass:** empty output — this library drags **no Vulkan** into a window that
 didn't ask for one. A non-empty result is a boundary leak to fix immediately.
+
+## Native folder picker
+
+Call `requestFolderPicker` from a loop that pumps events and polls the request. Choose a directory and check that `poll` returns its path; open it again, press Cancel, and check that `poll` returns `canceled`. Do this on each operating system; on Linux, SDL needs the desktop portal or `zenity`.

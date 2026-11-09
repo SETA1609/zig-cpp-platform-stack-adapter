@@ -510,9 +510,9 @@ pub const FolderPickerError = @import("folder_picker_request.zig").FolderPickerE
 /// the request each frame until it stops returning null. `window` is the dialog's parent;
 /// `default_location` is the directory it opens in. Main thread only.
 pub fn requestFolderPicker(window: ?*Window, default_location: ?[]const u8) std.mem.Allocator.Error!*FolderPickerRequest {
-    _ = window;
-    _ = default_location;
-    @panic("not implemented");
+    const request = try FolderPickerRequest.create(std.heap.c_allocator, default_location);
+    backend.showFolderPicker(request, if (window) |parent| parent.state() else null);
+    return request;
 }
 
 /// Open a file/URL with the OS default handler (`xdg-open` / `start` /
