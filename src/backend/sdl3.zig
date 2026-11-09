@@ -10,6 +10,7 @@
 //! action-mapped input (steps 5 & 7), Vulkan hand-off (step 6).
 
 const std = @import("std");
+const builtin = @import("builtin");
 const common = @import("../common.zig");
 
 /// SDL3's C API. Behind this boundary only — never re-exported.
@@ -720,4 +721,65 @@ fn scancodeFromKey(code: common.KeyCode) c_uint {
         .down => c.SDL_SCANCODE_DOWN,
         else => c.SDL_SCANCODE_UNKNOWN,
     };
+}
+
+// =============================================================================
+// Filesystem paths
+// =============================================================================
+
+fn isApplicationNameValid(application_name: []const u8) bool {
+    if (application_name.len == 0) return false;
+    return std.mem.indexOfAny(u8, application_name, "/\\\x00") == null;
+}
+
+/// SDL's per-user, per-app directory, created if needed, copied into `allocator`.
+pub fn applicationDataDirectory(allocator: std.mem.Allocator, application_name: []const u8) ![]u8 {
+    if (!isApplicationNameValid(application_name)) return error.ApplicationNameInvalid;
+    const application_name_z = try allocator.dupeSentinel(u8, application_name, 0);
+    defer allocator.free(application_name_z);
+    const sdl_path = c.SDL_GetPrefPath("", application_name_z.ptr) orelse return error.ApplicationDirectoryUnavailable;
+    defer c.SDL_free(sdl_path);
+    return allocator.dupe(u8, std.mem.span(sdl_path));
+}
+
+/// The value of an environment variable when it is set and an absolute path.
+fn absoluteEnvironmentPath(variable_name: [*:0]const u8) ?[]const u8 {
+    const value = c.SDL_getenv(variable_name) orelse return null;
+    const path = std.mem.span(value);
+    if (!std.fs.path.isAbsolute(path)) return null;
+    return path;
+}
+
+/// The operating system's convention for disposable per-user data, created if needed, ending
+/// with the path separator. SDL has no call for this.
+pub fn applicationCacheDirectory(allocator: std.mem.Allocator, application_name: []const u8) ![]u8 {
+    if (!isApplicationNameValid(application_name)) return error.ApplicationNameInvalid;
+    const path = switch (builtin.os.tag) {
+        .windows => try std.fmt.allocPrintSentinel(allocator, "{s}\\{s}\\cache\\", .{
+            absoluteEnvironmentPath("LOCALAPPDATA") orelse return error.ApplicationDirectoryUnavailable,
+            application_name,
+        }, 0),
+        .macos, .ios => try std.fmt.allocPrintSentinel(allocator, "{s}/Library/Caches/{s}/", .{
+            absoluteEnvironmentPath("HOME") orelse return error.ApplicationDirectoryUnavailable,
+            application_name,
+        }, 0),
+        else => if (absoluteEnvironmentPath("XDG_CACHE_HOME")) |cache_home|
+            try std.fmt.allocPrintSentinel(allocator, "{s}/{s}/", .{ cache_home, application_name }, 0)
+        else
+            try std.fmt.allocPrintSentinel(allocator, "{s}/.cache/{s}/", .{
+                absoluteEnvironmentPath("HOME") orelse return error.ApplicationDirectoryUnavailable,
+                application_name,
+            }, 0),
+    };
+    defer allocator.free(path);
+    if (!c.SDL_CreateDirectory(path.ptr)) return error.ApplicationDirectoryUnavailable;
+    // A copy without the terminator, so the caller's `free` sees the length it was allocated with.
+    return allocator.dupe(u8, path);
+}
+
+/// Hands a URL such as `file:///tmp/a.txt` to the operating system's default handler.
+pub fn openWithSystemDefault(url: []const u8) !void {
+    const url_z = try ally.dupeSentinel(u8, url, 0);
+    defer ally.free(url_z);
+    if (!c.SDL_OpenURL(url_z.ptr)) return error.OpenWithSystemDefaultFailed;
 }

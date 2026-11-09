@@ -10,8 +10,8 @@ const h = @import("harness.zig");
 const gate = h.gate;
 
 const done = .{
-    .applicationDataDirectory = false,
-    .applicationCacheDirectory = false,
+    .applicationDataDirectory = true,
+    .applicationCacheDirectory = true,
 };
 
 // WHEN calling applicationDataDirectory for "tdd-app" · GIVEN a started platform · THEN it returns an owned path of non-zero length.
@@ -76,4 +76,35 @@ test "applicationCacheDirectory: differs from the persistent data dir" {
     const cache = try platform.applicationCacheDirectory(std.testing.allocator, "tdd-app");
     defer std.testing.allocator.free(cache);
     try std.testing.expect(!std.mem.eql(u8, data, cache));
+}
+
+fn expectExistingAbsoluteDirectoryPath(path: []const u8) !void {
+    try std.testing.expect(std.fs.path.isAbsolute(path));
+    try std.testing.expect(path[path.len - 1] == std.fs.path.sep);
+    var directory = try std.Io.Dir.openDirAbsolute(std.testing.io, path, .{});
+    directory.close(std.testing.io);
+}
+
+// WHEN asking for both directories · GIVEN a started platform · THEN each is absolute, ends with the separator, and exists.
+test "application directories: absolute, ending with the separator, and created" {
+    try gate(done.applicationDataDirectory and done.applicationCacheDirectory);
+    try h.startup();
+    defer platform.deinit();
+    const data = try platform.applicationDataDirectory(std.testing.allocator, "tdd-app");
+    defer std.testing.allocator.free(data);
+    try expectExistingAbsoluteDirectoryPath(data);
+    const cache = try platform.applicationCacheDirectory(std.testing.allocator, "tdd-app");
+    defer std.testing.allocator.free(cache);
+    try expectExistingAbsoluteDirectoryPath(cache);
+}
+
+// WHEN the application name is empty or holds a separator · GIVEN a started platform · THEN both calls refuse it.
+test "application directories: a name that is not one path segment is refused" {
+    try gate(done.applicationDataDirectory and done.applicationCacheDirectory);
+    try h.startup();
+    defer platform.deinit();
+    for ([_][]const u8{ "", "../escape", "a/b", "a\\b" }) |name| {
+        try std.testing.expectError(error.ApplicationNameInvalid, platform.applicationDataDirectory(std.testing.allocator, name));
+        try std.testing.expectError(error.ApplicationNameInvalid, platform.applicationCacheDirectory(std.testing.allocator, name));
+    }
 }

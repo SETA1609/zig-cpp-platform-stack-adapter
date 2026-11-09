@@ -493,24 +493,19 @@ pub fn sleep(nanoseconds: u64) void {
 /// Per-user, per-app directory for **persistent** data (saves, config),
 /// created if needed. Caller owns the returned path — free it. *(since v0.8.0)*
 pub fn applicationDataDirectory(allocator: std.mem.Allocator, application_name: []const u8) ![]u8 {
-    _ = allocator;
-    _ = application_name;
-    @panic("not implemented");
+    return backend.applicationDataDirectory(allocator, application_name);
 }
 
 /// Per-user, per-app directory for **disposable** cache data. Caller owns the
 /// returned path — free it. *(since v0.8.0)*
 pub fn applicationCacheDirectory(allocator: std.mem.Allocator, application_name: []const u8) ![]u8 {
-    _ = allocator;
-    _ = application_name;
-    @panic("not implemented");
+    return backend.applicationCacheDirectory(allocator, application_name);
 }
 
 /// Open a file/URL with the OS default handler (`xdg-open` / `start` /
 /// `open`). *(since v0.8.0)*
 pub fn openWithSystemDefault(path: []const u8) !void {
-    _ = path;
-    @panic("not implemented");
+    return backend.openWithSystemDefault(path);
 }
 
 // =============================================================================
