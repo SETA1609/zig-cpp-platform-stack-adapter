@@ -18,11 +18,11 @@ const gate = h.gate;
 const Context = enum(u16) { gameplay, ui_menu, dialog, inventory, cinematic };
 
 const done = .{
-    .pushContext = false,
-    .popContext = false,
-    .replaceTopContext = false,
-    .activeContext = false,
-    .isContextActive = false,
+    .pushContext = true,
+    .popContext = true,
+    .replaceTopContext = true,
+    .activeContext = true,
+    .isContextActive = true,
 };
 
 // WHEN pushing gameplay and querying activeContext · GIVEN a started platform · THEN the active context is gameplay.
