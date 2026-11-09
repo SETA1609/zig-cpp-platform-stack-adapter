@@ -128,3 +128,14 @@ Add a Development section to `README.md` and PR numbers to the changelog.
 Status: done (#8)
 
 Track this repo's work in `issues.md` with its own issue numbers, title changelog entries by those issues, and remove references to other projects' issue IDs from the docs and the changelog.
+
+---
+
+## Issue 8 — Turn on the dev to main branch rules
+
+Status: todo
+Needs: a decision to gate `main` behind `dev`
+
+`dev` is meant for first testing and `main` for releases, but issue branches currently merge straight into `main`. `dev` already holds the pieces: `.github/workflows/branch-rules.yml`, `.github/workflows/rebase-branches.yml`, and the CI scripts moved to `scripts/ci/`. Merging them into `main` makes every pull request into `main` that does not come from `dev` fail, so do it only when that flow starts. At that point, change `scripts/ci/rebase-branches.sh` to match the `issue-<n>-<slug>` branches (it looks for `feature/*`), retarget issue branches at `dev`, and update `CONTRIBUTING.md`.
+
+Done when: a pull request from an issue branch into `main` fails the check, one from `dev` passes, and pushing to `dev` rebases open issue branches.
