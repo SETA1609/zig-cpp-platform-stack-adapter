@@ -139,3 +139,14 @@ Needs: a decision to gate `main` behind `dev`
 `dev` is meant for first testing and `main` for releases, but issue branches currently merge straight into `main`. `dev` already holds the pieces: `.github/workflows/branch-rules.yml`, `.github/workflows/rebase-branches.yml`, and the CI scripts moved to `scripts/ci/`. Merging them into `main` makes every pull request into `main` that does not come from `dev` fail, so do it only when that flow starts. At that point, change `scripts/ci/rebase-branches.sh` to match the `issue-<n>-<slug>` branches (it looks for `feature/*`), retarget issue branches at `dev`, and update `CONTRIBUTING.md`.
 
 Done when: a pull request from an issue branch into `main` fails the check, one from `dev` passes, and pushing to `dev` rebases open issue branches.
+
+---
+
+## Issue 9 — Native folder picker
+
+Status: todo
+Needs: —
+
+Applications need the player to choose a directory. Wrap `SDL_ShowOpenFolderDialog` so no SDL type crosses the public API. The dialog is asynchronous and its callback can run on another thread, so the caller starts a request and polls it from its normal event loop.
+
+Done when: `zig build test` covers selected, canceled, and failed requests without a display; the library builds for Linux and Windows; the dialog returns a path and a cancel in a manual run.
