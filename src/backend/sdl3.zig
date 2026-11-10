@@ -11,6 +11,7 @@
 
 const std = @import("std");
 const builtin = @import("builtin");
+const FolderPickerRequest = @import("../folder_picker_request.zig").FolderPickerRequest;
 const common = @import("../common.zig");
 
 /// SDL3's C API. Behind this boundary only — never re-exported.
@@ -806,4 +807,15 @@ pub fn openWithSystemDefault(url: []const u8) !void {
     const url_z = try ally.dupeSentinel(u8, url, 0);
     defer ally.free(url_z);
     if (!c.SDL_OpenURL(url_z.ptr)) return error.OpenWithSystemDefaultFailed;
+}
+
+fn folderPickerCallback(user_data: ?*anyopaque, file_list: [*c]const [*c]const u8, _: c_int) callconv(.c) void {
+    const request: *FolderPickerRequest = @ptrCast(@alignCast(user_data.?));
+    request.completeFromFileList(@ptrCast(file_list));
+}
+
+/// Opens the native dialog; SDL answers through `folderPickerCallback`, maybe on another thread.
+pub fn showFolderPicker(request: *FolderPickerRequest, parent: ?*WindowState) void {
+    const default_location: [*c]const u8 = if (request.default_location) |location| location.ptr else null;
+    c.SDL_ShowOpenFolderDialog(folderPickerCallback, request, if (parent) |window| window.sdl else null, default_location, false);
 }

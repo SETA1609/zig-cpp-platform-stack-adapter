@@ -107,3 +107,47 @@ test "every public declaration type-checks (incl. unreferenced stubs)" {
     std.testing.refAllDecls(platform.Window);
     std.testing.refAllDecls(platform.GlContext);
 }
+
+// -- Folder picker: the request's state, without a dialog or a display --------
+
+const test_selected_path: [*:0]const u8 = "/home/player/data";
+
+// WHEN nothing has completed the request · GIVEN a new request · THEN poll returns null, then the outcome once SDL answers.
+test "FolderPickerRequest: pending until the callback answers, then the chosen path" {
+    const allocator = std.testing.allocator;
+    const request = try platform.FolderPickerRequest.create(allocator, null);
+    try std.testing.expectEqual(@as(?platform.FolderPickerOutcome, null), try request.poll(allocator));
+
+    const file_list = [_:null]?[*:0]const u8{test_selected_path};
+    request.completeFromFileList(&file_list);
+    const outcome = (try request.poll(allocator)).?;
+    defer allocator.free(outcome.selected);
+    try std.testing.expectEqualStrings("/home/player/data", outcome.selected);
+}
+
+// WHEN SDL reports an empty list · GIVEN a request · THEN the outcome is canceled.
+test "FolderPickerRequest: an empty file list is a cancel" {
+    const allocator = std.testing.allocator;
+    const request = try platform.FolderPickerRequest.create(allocator, "/home/player");
+    const empty_file_list = [_:null]?[*:0]const u8{};
+    request.completeFromFileList(&empty_file_list);
+    try std.testing.expectEqual(platform.FolderPickerOutcome.canceled, (try request.poll(allocator)).?);
+}
+
+// WHEN SDL passes a null list · GIVEN a request · THEN poll returns FolderPickerFailed.
+test "FolderPickerRequest: a null file list is a failure" {
+    const allocator = std.testing.allocator;
+    const request = try platform.FolderPickerRequest.create(allocator, null);
+    request.completeFromFileList(null);
+    try std.testing.expectError(error.FolderPickerFailed, request.poll(allocator));
+}
+
+// WHEN copying the path runs out of memory · GIVEN a completed request · THEN poll reports it and leaks nothing.
+test "FolderPickerRequest: out of memory while copying the outcome leaks nothing" {
+    const allocator = std.testing.allocator;
+    const request = try platform.FolderPickerRequest.create(allocator, null);
+    const file_list = [_:null]?[*:0]const u8{test_selected_path};
+    request.completeFromFileList(&file_list);
+    var failing_allocator: std.testing.FailingAllocator = .init(allocator, .{ .fail_index = 0 });
+    try std.testing.expectError(error.OutOfMemory, request.poll(failing_allocator.allocator()));
+}
